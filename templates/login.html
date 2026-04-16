@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+
+        <div class="card shadow p-4">
+            <h3 class="text-center mb-4">Login</h3>
+
+            <form method="POST" action="/login">
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+
+                <!-- Role Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Login As</label>
+                    <select name="role" class="form-control" required>
+                        <option value="">Select Role</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+
+                <!-- Button -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+
+            </form>
+
+            <!-- Optional message -->
+            {% if message %}
+                <p class="text-danger text-center mt-3">{{ message }}</p>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
