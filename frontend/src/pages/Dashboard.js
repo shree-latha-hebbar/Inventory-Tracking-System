@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const navigate = useNavigate();
-
-  // 🔥 FIXED ROLE (important)
   const role = (localStorage.getItem("role") || "").trim().toLowerCase();
+  const isManager = role === "manager";
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -28,7 +27,7 @@ function Dashboard() {
           {/* Right Side */}
           <div className="flex items-center gap-4">
             <span className="bg-white px-4 py-2 rounded-xl border text-sm text-gray-600">
-              👤 {role === "manager" ? "Manager" : "Staff"}
+              👤 {isManager ? "Manager" : "Staff"}
             </span>
 
             <button
@@ -108,12 +107,11 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Insights */}
+          {/* Stock Insights */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border">
             <h3 className="text-lg font-semibold mb-4">Stock Insights</h3>
 
             <div className="space-y-4">
-
               <div className="flex justify-between bg-gray-50 p-4 rounded-xl">
                 <div>
                   <p className="font-medium">Highest Stock</p>
@@ -139,7 +137,6 @@ function Dashboard() {
                   Stable
                 </span>
               </div>
-
             </div>
           </div>
 
