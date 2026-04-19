@@ -1,33 +1,37 @@
-import { Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
+// Ensure these paths match your folder structure exactly [cite: 32-35]
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
-import AddProduct from "./pages/AddProduct";
+import EditProduct from "./pages/EditProduct";
+import AboutUs from "./pages/AboutUs";
+import Transactions from "./pages/Transactions";
+import Reports from "./pages/Report";
 
 function App() {
-  const [products, setProducts] = useState([
-    { id: 101, name: "Wireless Mouse", category: "Peripherals", total: 50, current: 23 },
-    { id: 102, name: "Mechanical Keyboard", category: "Peripherals", total: 40, current: 4 },
-    { id: 103, name: "USB-C Hub", category: "Accessories", total: 30, current: 6 },
-    { id: 104, name: "HDMI Cable", category: "Cables", total: 100, current: 67 },
-    { id: 105, name: "Laptop Stand", category: "Furniture", total: 35, current: 3 }
-  ]);
-
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      
-      {/* IMPORTANT */}
-      <Route path="/products" element={<Products products={products} />} />
+    <div className="min-h-screen bg-slate-50">
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/about" element={<AboutUs />} />
 
-      <Route
-        path="/add-product"
-        element={<AddProduct products={products} setProducts={setProducts} />}
-      />
-    </Routes>
+        {/* Dashboard and Products */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/transactions" element={<Transactions />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/add-product" element={<EditProduct isNew={true} />} />
+        <Route path="/edit-product/:id" element={<EditProduct />} />
+
+        {/* Redirect unknown routes to Home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
   );
 }
 

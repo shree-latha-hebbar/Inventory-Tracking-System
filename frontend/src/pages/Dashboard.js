@@ -1,148 +1,1017 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+// Assets imports
+import logo from "../assets/logo.png";
+
+const S = {
+  root: {
+    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    minHeight: "100vh",
+    display: "flex",
+    background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+    color: "#0f172a",
+  },
+
+  /* ── Sidebar (NEW LIGHT THEME) ── */
+  sidebar: {
+    width: "280px",
+    display: "flex",
+    flexDirection: "column",
+    padding: "32px 24px",
+    background: "#0f172a",
+    color: "#fff",
+    transition: "all .3s",
+    position: "relative",
+    zIndex: 10,
+    boxShadow: "10px 0 40px rgba(0,0,0,0.1)",
+  },
+  sidebarBrand: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "0 12px",
+    marginBottom: "40px",
+  },
+  sidebarBrandName: {
+    fontSize: "1.4rem",
+    fontWeight: "950",
+    color: "#ffffff",
+    letterSpacing: "-0.8px",
+  },
+  sidebarItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "14px 16px",
+    borderRadius: "16px",
+    fontSize: "0.9rem",
+    fontWeight: "800",
+    color: "#94a3b8",
+    cursor: "pointer",
+    transition: "all .2s ease",
+    border: "none",
+    background: "transparent",
+    textAlign: "left",
+  },
+  sidebarItemActive: {
+    color: "#ffffff",
+    background: "#2563eb",
+    boxShadow: "0 10px 20px rgba(37,99,235,0.3)",
+  },
+  sidebarFooter: {
+    marginTop: "auto",
+    padding: "20px 12px 0",
+    borderTop: "1.5px solid rgba(255,255,255,0.05)",
+  },
+  logoutBtn: {
+    width: "100%",
+    padding: "12px",
+    borderRadius: "12px",
+    background: "rgba(239,68,68,0.1)",
+    color: "#ef4444",
+    border: "none",
+    fontWeight: "900",
+    cursor: "pointer",
+    transition: "all .3s",
+  },
+
+  /* ── Main Dashboard UI ── */
+  main: {
+    flex: 1,
+    padding: "32px 40px",
+    background: "#f8faff",
+    overflowY: "auto",
+    maxHeight: "100vh",
+  },
+  topBar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: "32px",
+    background: "#fff",
+    padding: "16px 24px",
+    borderRadius: "20px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
+    border: "1.5px solid #f1f5f9",
+  },
+
+  /* KPI Cards */
+  kpiGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "24px",
+    marginBottom: "32px",
+  },
+  kpiCard: (color) => ({
+    background: `${color}06`,
+    padding: "24px",
+    borderRadius: "24px",
+    border: `1.5px solid ${color}15`,
+    borderLeft: `5px solid ${color}`,
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
+    transition: "transform .2s",
+  }),
+  kpiLabel: { fontSize: "0.82rem", fontWeight: "700", color: "#64748b" },
+  kpiValue: { fontSize: "1.8rem", fontWeight: "950", color: "#0f172a", letterSpacing: "-1px" },
+  kpiTrend: (up) => ({
+    fontSize: "0.75rem",
+    fontWeight: "800",
+    color: up ? "#10b981" : "#ef4444",
+    background: up ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
+    padding: "4px 8px",
+    borderRadius: "8px",
+    width: "fit-content",
+  }),
+
+  /* Layout Grids */
+  analyticsGrid: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1.2fr",
+    gap: "24px",
+    marginBottom: "24px",
+  },
+  standardCard: (accentColor) => ({
+    background: "#fff",
+    padding: "24px",
+    borderRadius: "24px",
+    border: "1.5px solid #f1f5f9",
+    borderTop: accentColor ? `4px solid ${accentColor}` : "1.5px solid #f1f5f9",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.02)",
+  }),
+  cardTitle: { fontSize: "1.05rem", fontWeight: "900", color: "#0f172a", marginBottom: "20px" },
+
+  /* Generic Table */
+  table: { width: "100%", borderCollapse: "collapse" },
+  th: { textAlign: "left", fontSize: "0.74rem", color: "#64748b", background: "#f8faff", textTransform: "uppercase", padding: "12px 16px", borderBottom: "1.5px solid #f1f5f9", fontWeight: "900", letterSpacing: "0.5px" },
+  td: { padding: "14px 16px", fontSize: "0.86rem", color: "#475569", borderBottom: "1.5px solid #f8fafc", fontWeight: "600" },
+  statusPip: (color) => ({
+    width: "10px",
+    height: "10px",
+    borderRadius: "50%",
+    background: color,
+    display: "inline-block",
+    marginRight: "8px",
+  }),
+  activitySection: {
+    background: "#fff",
+    padding: "24px",
+    borderRadius: "24px",
+    border: "1.5px solid #f1f5f9",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.02)",
+    marginBottom: "24px",
+  },
+  sectionHeading: {
+    fontSize: "1.1rem",
+    fontWeight: "900",
+    color: "#1e3a8a",
+    marginBottom: "20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  tr: {
+    transition: "all .2s",
+  },
+  badge: {
+    padding: "4px 10px",
+    borderRadius: "8px",
+    fontSize: "0.72rem",
+    fontWeight: "800",
+  },
+  btnPrimary: {
+    background: "#2563eb",
+    color: "#fff",
+    border: "none",
+    padding: "12px 24px",
+    borderRadius: "14px",
+    fontWeight: "900",
+    fontSize: "0.9rem",
+    cursor: "pointer",
+    transition: "all .3s",
+    boxShadow: "0 10px 20px rgba(37,99,235,0.2)",
+  },
+};
+
+/* ─── CUSTOM CHART COMPONENTS ────────────────────────── */
+
+const SapphireLineChart = () => (
+  <svg viewBox="0 0 500 150" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+    <defs>
+      <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#2563eb" stopOpacity="0.15" />
+        <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+      </linearGradient>
+    </defs>
+    <path d="M0,120 Q50,110 100,80 T200,90 T300,50 T400,70 T500,30" fill="url(#lineGrad)" stroke="none" />
+    <path d="M0,120 Q50,110 100,80 T200,90 T300,50 T400,70 T500,30" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
+    <circle cx="200" cy="90" r="4" fill="#fff" stroke="#2563eb" strokeWidth="2.5" />
+    <text x="180" y="75" fontSize="12" fontWeight="950" fill="#1e3a8a">$22,480</text>
+  </svg>
+);
+
+const SapphireHorizontalBar = ({ name, value, color }) => (
+  <div style={{ marginBottom: "16px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+      <span style={{ fontSize: "0.8rem", fontWeight: "800", color: "#64748b" }}>{name}</span>
+      <span style={{ fontSize: "0.8rem", fontWeight: "950", color: "#0f172a" }}>{value}k</span>
+    </div>
+    <div style={{ height: "10px", width: "100%", background: "#f1f5f9", borderRadius: "10px", overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${(value/10)*100}%`, background: color, borderRadius: "10px", transition: "width 1s ease" }} />
+    </div>
+  </div>
+);
+
+const SapphireDonut = ({ data, centerValue }) => {
+  const total = data.reduce((a, b) => a + b.val, 0);
+  let cum = 0;
+  return (
+    <div style={{ position: "relative", width: "150px", height: "150px", margin: "0 auto" }}>
+      <svg viewBox="0 0 40 40" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
+        {data.map((item, i) => {
+          const per = (item.val / total) * 100;
+          const offset = 100 - cum;
+          cum += per;
+          return (
+            <circle key={i} cx="20" cy="20" r="15.915" fill="none" stroke={item.color} strokeWidth="6" strokeDasharray={`${per} ${100-per}`} strokeDashoffset={offset} />
+          );
+        })}
+      </svg>
+      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+        <span style={{ fontSize: "1.2rem", fontWeight: "950", color: "#0f172a" }}>{centerValue || (total + "%")}</span>
+      </div>
+    </div>
+  );
+};
 
 function Dashboard() {
   const navigate = useNavigate();
-  const role = (localStorage.getItem("role") || "").trim().toLowerCase();
-  const isManager = role === "manager";
+  const [role, setRole] = useState("");
+  const [activeItem, setActiveItem] = useState("Dashboard");
+  const [stockItems, setStockItems] = useState([
+    { id: 1, name: "Steelcase Gesture Chair", stock: 12, total: 20, sec: "NW-Floor", adjustment: 0 },
+    { id: 2, name: "MacBook Pro M3 Max", stock: 15, total: 30, sec: "Secure-Vault", adjustment: 0 },
+    { id: 3, name: "Logitech MX Master 3S", stock: 85, total: 100, sec: "Shelf-A3", adjustment: 0 },
+  ]);
+
+  useEffect(() => {
+    // 🛡️ Role Guard
+    const savedRole = localStorage.getItem("role");
+    if (!savedRole) {
+      navigate("/");
+    } else {
+      setRole(savedRole);
+    }
+
+    /* Inject Design Assets */
+    if (!document.getElementById("it-fonts")) {
+      const style = document.createElement("style");
+      style.id = "it-fonts";
+      style.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
+        @keyframes itFadeUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .it-fade-up { animation: itFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      `;
+      document.head.appendChild(style);
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("role");
+    navigate("/");
+  };
+
+  const roleConfigs = {
+    admin: {
+      color: "#6366f1",
+      icon: "🛡️",
+      label: "System Administrator",
+      menu: ["Dashboard", "Manage Products", "User Roles", "Audit Logs", "System Config"]
+    },
+    manager: {
+      color: "#2563eb",
+      icon: "📦",
+      label: "Operations Manager",
+      menu: ["Dashboard", "Manage Products", "Stock Orders", "Shipment Tracking", "Inventory Reports", "Suppliers"]
+    },
+    staff: {
+      color: "#0ea5e9",
+      icon: "🧑‍💼",
+      label: "Inventory Staff",
+      menu: ["Dashboard", "Product Search", "Update Stock", "Transaction History"]
+    }
+  };
+
+  const handleMenuClick = (m) => {
+    if (m === "Inventory Reports") {
+      navigate("/reports");
+      return;
+    }
+    setActiveItem(m);
+    if (m.toLowerCase().includes("product")) {
+      navigate("/products");
+    }
+  };
+
+  const current = roleConfigs[role] || roleConfigs.staff;
+
+  const activities = [
+    { id: "TX-9012", item: "Corporate Workstation", type: "Received", count: "14 Units", user: "John (Staff)", date: "2 mins ago", status: "Success" },
+    { id: "TX-9011", item: "Logitech MX Master 3S", type: "Dispatch", count: "02 Units", user: "System", date: "15 mins ago", status: "Success" },
+    { id: "TX-9010", item: "MacBook Pro M3 Max", type: "Stock Adj.", count: "01 Unit", user: "Sarah (Mgr)", date: "1 hour ago", status: "Flagged" },
+    { id: "TX-9009", item: "UltraSharp Display 32\"", type: "Received", count: "08 Units", user: "John (Staff)", date: "3 hours ago", status: "Success" },
+  ];
+
+  const renderGlobalHeader = () => (
+    <div style={S.topBar}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <h3 style={{ fontSize: "1.2rem", fontWeight: "950", background: "linear-gradient(135deg, #1e3a8a, #2563eb)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, letterSpacing: "-0.5px" }}>Command Center</h3>
+        <p style={{ fontSize: "0.72rem", fontWeight: "800", color: "#94a3b8", margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+        <button style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", position: "relative" }}>
+          🔔
+          <div style={{ position: "absolute", top: 0, right: 0, width: "8px", height: "8px", background: "#ef4444", borderRadius: "50%", border: "2px solid #fff" }} />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "4px 12px", borderRadius: "14px", background: "#f8fafc", border: "1.5px solid #f1f5f9" }}>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: "0.82rem", fontWeight: "950", color: "#0f172a", margin: 0 }}>{role.toUpperCase()}</p>
+            <p style={{ fontSize: "0.68rem", fontWeight: "800", color: "#94a3b8", margin: 0 }}>Operations</p>
+          </div>
+          <img src={`https://ui-avatars.com/api/?name=${role}&background=2563eb&color=fff`} style={{ width: "36px", height: "36px", borderRadius: "10px" }} alt="user" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDashboard = () => (
+    <>
+      <div style={S.kpiGrid} className="it-fade-up">
+        {/* Total Order */}
+        <div style={S.kpiCard("#2563eb")}>
+          <span style={S.kpiLabel}>Total Order</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>387</h2>
+            <span style={S.kpiTrend(true)}>↑ 10%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
+        </div>
+        {/* Total Revenue */}
+        <div style={S.kpiCard("#10b981")}>
+          <span style={S.kpiLabel}>Total Revenue</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#065f46" }}>$80,260</h2>
+            <span style={S.kpiTrend(true)}>↑ 5%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
+        </div>
+        {/* Delivered Order */}
+        <div style={S.kpiCard("#f59e0b")}>
+          <span style={S.kpiLabel}>Delivered Order</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#92400e" }}>45</h2>
+            <span style={S.kpiTrend(false)}>↓ 10%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
+        </div>
+        {/* Outstanding Delivered */}
+        <div style={S.kpiCard("#ef4444")}>
+          <span style={S.kpiLabel}>Outstanding Delivered</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#991b1b" }}>12</h2>
+            <span style={S.kpiTrend(true)}>↑ 2%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
+        </div>
+      </div>
+
+      <div style={S.analyticsGrid} className="it-fade-up it-delay-1">
+        <div style={S.standardCard("#2563eb")}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "26px" }}>
+            <div>
+              <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Sales Analytics</h3>
+              <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>$190,790</h1>
+            </div>
+            <select style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569" }}>
+              <option>Monthly View</option>
+              <option>Weekly View</option>
+            </select>
+          </div>
+          <div style={{ height: "220px", width: "100%" }}>
+            <SapphireLineChart />
+          </div>
+        </div>
+
+        <div style={S.standardCard("#3b82f6")}>
+           <h3 style={S.cardTitle}>Top Selling Products</h3>
+           <div style={{ paddingTop: "8px" }}>
+             <SapphireHorizontalBar name="Laptop UltraBook M3" value={8.5} color="#2563eb" />
+             <SapphireHorizontalBar name="Wireless Mouse Pro" value={6.2} color="#3b82f6" />
+             <SapphireHorizontalBar name="Printer Canon L-Series" value={4.8} color="#60a5fa" />
+             <SapphireHorizontalBar name="Monitor 4K OLED" value={3.9} color="#93c5fd" />
+           </div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "24px" }} className="it-fade-up it-delay-2">
+         {/* Replenishment Table */}
+         <div style={S.standardCard("#ef4444")}>
+           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+             <h3 style={S.cardTitle}>Replenishment Alerts</h3>
+             <button style={{ background: "rgba(37,99,235,0.08)", border: "none", color: "#2563eb", fontWeight: "900", fontSize: "0.78rem", cursor: "pointer", padding: "6px 14px", borderRadius: "10px" }} onClick={() => navigate("/products")}>View Inventory</button>
+           </div>
+           <table style={S.table}>
+             <thead>
+               <tr>
+                 <th style={S.th}>Asset</th>
+                 <th style={S.th}>SKU</th>
+                 <th style={S.th}>Qty</th>
+                 <th style={S.th}>Level</th>
+               </tr>
+             </thead>
+             <tbody>
+               {[
+                 { name: "Laptop HP G9", sku: "HP-10102", qty: 3, status: "#ef4444" },
+                 { name: "HDMI 2.1 Cable", sku: "HD-32101", qty: 8, status: "#f59e0b" },
+                 { name: "Magic Mouse 2", sku: "MM-90221", qty: 2, status: "#ef4444" },
+               ].map((row, i) => (
+                 <tr key={i}>
+                   <td style={S.td}>{row.name}</td>
+                   <td style={S.td}>{row.sku}</td>
+                   <td style={S.td}>{row.qty}</td>
+                   <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+         </div>
+
+         {/* Stats Donut 1 */}
+         <div style={S.standardCard("#f59e0b")}>
+           <h3 style={S.cardTitle}>Sales Channel</h3>
+           <div style={{ padding: "10px 0" }}>
+            <SapphireDonut 
+              centerValue="$120k"
+              data={[{val: 45, color: "#1e3a8a"}, {val: 30, color: "#3b82f6"}, {val: 25, color: "#f59e0b"}]} 
+            />
+           </div>
+           <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
+              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1e3a8a" }} /> Online Distribution (45%)
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} /> Offline Retail (30%)
+              </div>
+           </div>
+         </div>
+
+         {/* Stats Donut 2 */}
+         <div style={S.standardCard("#10b981")}>
+           <h3 style={S.cardTitle}>User Distribution</h3>
+           <div style={{ padding: "10px 0" }}>
+            <SapphireDonut 
+              centerValue="70+"
+              data={[{val: 52, color: "#10b981"}, {val: 18, color: "#2563eb"}, {val: 30, color: "#6366f1"}]} 
+            />
+           </div>
+           <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
+              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Operational Staff (52%)
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Administrators (18%)
+              </div>
+           </div>
+         </div>
+      </div>
+    </>
+  );
+
+  const renderStaffDashboard = () => (
+    <div className="it-fade-up">
+      <div style={S.kpiGrid}>
+        <div style={S.kpiCard("#10b981")}>
+          <span style={S.kpiLabel}>Movements Today</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#065f46" }}>24</h2>
+            <span style={S.kpiTrend(true)}>↑ 4%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Verified transactions</p>
+        </div>
+
+        <div style={S.kpiCard("#f59e0b")}>
+          <span style={S.kpiLabel}>Pending Verifications</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#92400e" }}>06</h2>
+            <span style={S.kpiTrend(false)}>↓ 2%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Assigned to your terminal</p>
+        </div>
+
+        <div style={S.kpiCard("#2563eb")}>
+          <span style={S.kpiLabel}>Shift Efficiency</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>98.2%</h2>
+            <span style={S.kpiTrend(true)}>↑ 1%</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>System audit performance</p>
+        </div>
+
+        <div style={S.kpiCard("#6366f1")}>
+          <span style={S.kpiLabel}>Active Assets</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+            <h2 style={{ ...S.kpiValue, color: "#3730a3" }}>142</h2>
+            <span style={{ ...S.kpiTrend(true), background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>Ready</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Under your management</p>
+        </div>
+      </div>
+
+      <div style={S.analyticsGrid} className="it-delay-1">
+        <div style={S.standardCard("#2563eb")}>
+          <h3 style={S.cardTitle}>Daily Distribution Trend</h3>
+          <div style={{ height: "220px" }}>
+            <SapphireLineChart />
+          </div>
+        </div>
+        <div style={S.standardCard("#10b981")}>
+          <h3 style={S.cardTitle}>Terminal Distribution</h3>
+          <div style={{ padding: "10px 0" }}>
+            <SapphireDonut 
+              centerValue="100%"
+              data={[{val: 65, color: "#10b981"}, {val: 35, color: "#2563eb"}]} 
+            />
+          </div>
+          <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Processed (65%)
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Quality Check (35%)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={S.standardCard("#6366f1")} className="it-delay-2">
+         <h3 style={S.cardTitle}>Your Shift Activity Trail</h3>
+         <table style={S.table}>
+           <thead>
+             <tr>
+               <th style={S.th}>Transaction</th>
+               <th style={S.th}>Asset</th>
+               <th style={S.th}>Method</th>
+               <th style={S.th}>Timestamp</th>
+               <th style={S.th}>Validation</th>
+             </tr>
+           </thead>
+           <tbody>
+             {[
+               { id: "TX-Staff-01", name: "Steelcase Chair", method: "Barcoding", time: "10 mins ago", status: "#10b981" },
+               { id: "TX-Staff-02", name: "UltraWide 32\"", method: "RFID Scan", time: "45 mins ago", status: "#10b981" },
+               { id: "TX-Staff-03", name: "Nvidia RTX 4090", method: "Manual Adj.", time: "2 hours ago", status: "#f59e0b" },
+             ].map((row, i) => (
+               <tr key={i}>
+                 <td style={S.td}>{row.id}</td>
+                 <td style={S.td}>{row.name}</td>
+                 <td style={S.td}><span style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "900" }}>{row.method}</span></td>
+                 <td style={S.td}>{row.time}</td>
+                 <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "900", fontSize: "0.7rem" }}>VERIFIED</span></td>
+               </tr>
+             ))}
+           </tbody>
+         </table>
+      </div>
+    </div>
+  );
+
+
+  const renderUserRoles = () => (
+    <div style={S.activitySection}>
+      <div style={S.sectionHeading}>👥 Team Roles & Permissions</div>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            <th style={S.th}>User</th>
+            <th style={S.th}>Email</th>
+            <th style={S.th}>Role</th>
+            <th style={S.th}>Access Level</th>
+            <th style={S.th}>Status</th>
+            <th style={S.th}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            { name: "John Doe", email: "john@inventrack.com", role: "Manager", access: "Operations", status: "Active", color: "#2563eb" },
+            { name: "Sarah Smith", email: "sarah@inventrack.com", role: "Admin", access: "Full Control", status: "Active", color: "#6366f1" },
+            { name: "Mike Ross", email: "mike@inventrack.com", role: "Staff", access: "Restricted", status: "Away", color: "#0ea5e9" },
+          ].map((u, i) => (
+            <tr key={i} style={S.tr}>
+              <td style={{ ...S.td, borderRadius: "12px 0 0 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: u.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem" }}>
+                    {u.name.split(" ").map(n => n[0]).join("")}
+                  </div>
+                  {u.name}
+                </div>
+              </td>
+              <td style={S.td}>{u.email}</td>
+              <td style={S.td}>
+                <span style={{ ...S.badge, background: u.color + "20", color: u.color }}>{u.role}</span>
+              </td>
+              <td style={S.td}>{u.access}</td>
+              <td style={S.td}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: u.status === "Active" ? "#10b981" : "#94a3b8" }} />
+                  {u.status}
+                </div>
+              </td>
+              <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
+                <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>Edit Access</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderAuditLogs = () => (
+    <div style={S.activitySection}>
+      <div style={S.sectionHeading}>📜 System Audit Trail</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {[
+          { icon: "🔐", title: "Security Login", desc: "Admin Sarah logged in from IP 192.168.1.45", time: "Just now", color: "#6366f1" },
+          { icon: "📝", title: "Asset Modified", desc: "Manager John updated stock for Nvidia RTX 4090", time: "12 mins ago", color: "#2563eb" },
+          { icon: "⚙️", title: "Global Config", desc: "System updated LIFO valuation method", time: "1 hour ago", color: "#475569" },
+          { icon: "🚢", title: "Shipment Dispatched", desc: "Batch #TX-9011 cleared for regional logistics", time: "2 hours ago", color: "#10b981" },
+        ].map((l, i) => (
+          <div key={i} style={{ display: "flex", gap: "20px", padding: "20px", background: "#f8fafc", borderRadius: "20px", border: "1px solid #e2e8f0" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: l.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", flexShrink: 0 }}>
+              {l.icon}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                <span style={{ fontWeight: 800, color: "#1e293b" }}>{l.title}</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8" }}>{l.time}</span>
+              </div>
+              <p style={{ fontSize: "0.9rem", color: "#64748b" }}>{l.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderSystemConfig = () => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+      <div style={S.activitySection}>
+        <div style={S.sectionHeading}>🔔 Notifications</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {[
+            { label: "Low Stock Emails", desc: "Alert managers when assets hit threshold", active: true },
+            { label: "Daily Operations Digest", desc: "Summary of activities at 8:00 AM", active: true },
+            { label: "Audit Log Alerts", desc: "Notify on critical system changes", active: false },
+          ].map((t, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontWeight: 800, fontSize: "0.92rem" }}>{t.label}</p>
+                <p style={{ fontSize: "0.8rem", color: "#64748b" }}>{t.desc}</p>
+              </div>
+              <div style={{ width: "44px", height: "24px", borderRadius: "12px", background: t.active ? "#2563eb" : "#cbd5e1", position: "relative", cursor: "pointer" }}>
+                <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#fff", position: "absolute", top: "3px", left: t.active ? "23px" : "3px", transition: "all .2s" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.activitySection}>
+        <div style={S.sectionHeading}>📈 Valuation Method</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {["FIFO (First-In, First-Out)", "LIFO (Last-In, First-Out)", "Weighted Average Cost"].map((m, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", background: i === 0 ? "#eff6ff" : "transparent", borderRadius: "12px", border: i === 0 ? "1.5px solid #2563eb" : "1.5px solid transparent", cursor: "pointer" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "2px solid #2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {i === 0 && <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#2563eb" }} />}
+              </div>
+              <span style={{ fontWeight: 700, fontSize: "0.9rem", color: i === 0 ? "#1e40af" : "#64748b" }}>{m}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStockOrders = () => (
+    <div style={S.activitySection}>
+      <div style={S.sectionHeading}>📦 Active Purchase Orders</div>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            <th style={S.th}>Order ID</th>
+            <th style={S.th}>Supplier</th>
+            <th style={S.th}>Date</th>
+            <th style={S.th}>Inventory Value</th>
+            <th style={S.th}>Status</th>
+            <th style={S.th}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            { id: "PO-8041", supplier: "Global Tech Inc.", date: "Today", value: "$12,400", status: "Approved", color: "#2563eb" },
+            { id: "PO-8040", supplier: "Office Max Co.", date: "Yesterday", value: "$1,850", status: "Pending", color: "#f59e0b" },
+            { id: "PO-8039", supplier: "Steelcase Mfg.", date: "15 Apr", value: "$4,200", status: "Received", color: "#10b981" },
+          ].map((o, i) => (
+            <tr key={i} style={S.tr}>
+              <td style={{ ...S.td, borderRadius: "12px 0 0 12px", color: "#2563eb" }}>{o.id}</td>
+              <td style={S.td}>{o.supplier}</td>
+              <td style={S.td}>{o.date}</td>
+              <td style={S.td}>{o.value}</td>
+              <td style={S.td}>
+                <span style={{ ...S.badge, background: o.color + "20", color: o.color }}>{o.status}</span>
+              </td>
+              <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
+                <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>View Invoice</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderShipmentTracking = () => (
+    <div style={S.activitySection}>
+      <div style={S.sectionHeading}>🚢 Supply Chain Logistics Monitor</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        {[
+          { id: "SHIP-101", origin: "HK Hub", destiny: "Main WH", status: "On Route", progress: 75, carrier: "DHL Express" },
+          { id: "SHIP-102", origin: "Logistics HQ", destiny: "Main WH", status: "Dispatching", progress: 15, carrier: "In-House Logistics" },
+          { id: "SHIP-103", origin: "Steelcase Factory", destiny: "Main WH", status: "Arrived", progress: 100, carrier: "FedEx Freight" },
+        ].map((s, i) => (
+          <div key={i} style={{ padding: "24px", background: "#f8fafc", borderRadius: "24px", border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div>
+                <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#1e293b" }}>{s.id}</span>
+                <span style={{ marginLeft: "12px", color: "#64748b", fontSize: "0.9rem" }}>Carrier: {s.carrier}</span>
+              </div>
+              <span style={{ ...S.badge, background: s.progress === 100 ? "#dcfce7" : "#dbeafe", color: s.progress === 100 ? "#166534" : "#1e40af" }}>
+                {s.status}
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", fontWeight: 700, color: "#94a3b8", marginBottom: "8px" }}>
+              <span>{s.origin}</span>
+              <span>{s.destiny}</span>
+            </div>
+            <div style={{ height: "8px", background: "#e2e8f0", borderRadius: "4px", position: "relative", overflow: "hidden" }}>
+              <div style={{ width: s.progress + "%", height: "100%", background: "#2563eb", borderRadius: "4px", transition: "width 1s ease-in-out" }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderInventoryReports = () => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+      <div style={S.activitySection}>
+        <div style={S.sectionHeading}>📊 Category Distribution</div>
+        <div style={{ height: "240px", display: "flex", alignItems: "flex-end", gap: "24px", padding: "20px 0" }}>
+          {[
+            { label: "Hardware", value: 85, color: "#6366f1" },
+            { label: "Monitors", value: 45, color: "#2563eb" },
+            { label: "Peripheral", value: 65, color: "#0ea5e9" },
+            { label: "Furniture", value: 30, color: "#94a3b8" },
+          ].map((bar, i) => (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", gap: "12px" }}>
+              <div style={{ width: "100%", height: bar.value + "%", background: bar.color, borderRadius: "10px 10px 4px 4px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textAlign: "center" }}>{bar.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={S.activitySection}>
+        <div style={S.sectionHeading}>📥 Ready to Export</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {[
+            { title: "Monthly Stock Valuation", date: "Apr 2026", size: "2.4 MB" },
+            { title: "Deficit Alert Summary", date: "Today", size: "0.8 MB" },
+            { title: "Supplier Lead-Time Report", date: "Mar 2026", size: "1.2 MB" },
+          ].map((repo, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", justifySpace: "space-between", padding: "16px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 800, fontSize: "0.9rem" }}>{repo.title}</p>
+                <p style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{repo.date} • {repo.size}</p>
+              </div>
+              <button style={{ color: "#2563eb", fontWeight: 700, fontSize: "0.8rem", background: "none", border: "none", cursor: "pointer" }}>Download</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSuppliers = () => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
+      {[
+        { name: "Global Tech Inc.", type: "Hardware & Silicates", lead: "12 Days", rating: 4.8, contact: "support@globaltech.com" },
+        { name: "Steelcase Mfg.", type: "Premium Furniture", lead: "24 Days", rating: 4.5, contact: "logistics@steelcase.com" },
+        { name: "LG Display Hub", type: "Monitors & Panels", lead: "08 Days", rating: 4.9, contact: "hub@lgdisplay.com" },
+        { name: "Logitech Logistics", type: "Peripherals", lead: "05 Days", rating: 4.7, contact: "b2b@logitech.com" },
+      ].map((supp, i) => (
+        <div key={i} style={{ ...S.statCard, padding: "32px", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.06)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "none"; }}>
+           <div style={{ fontSize: "2rem", marginBottom: "16px" }}>🏢</div>
+           <h4 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "4px" }}>{supp.name}</h4>
+           <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+             <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#64748b", background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px" }}>{supp.type}</span>
+           </div>
+           <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+             <div>
+               <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Avg Lead Time</p>
+               <p style={{ fontWeight: 800 }}>{supp.lead}</p>
+             </div>
+             <div style={{ textAlign: "right" }}>
+               <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Performance</p>
+               <p style={{ fontWeight: 800, color: "#16a34a" }}>⭐ {supp.rating}</p>
+             </div>
+           </div>
+        </div>
+      ))}
+    </div>
+  );
+
+
+  const renderUpdateStock = () => (
+    <div style={S.activitySection}>
+      <div style={S.sectionHeading}>📦 Rapid Stock Adjustment</div>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            <th style={S.th}>Asset Item</th>
+            <th style={S.th}>Total Quantity</th>
+            <th style={S.th}>Current Stock</th>
+            <th style={S.th}>Adjustment</th>
+            <th style={S.th}>Warehouse Sec.</th>
+            <th style={S.th}>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stockItems.map((item, i) => (
+            <tr key={item.id} style={S.tr}>
+              <td style={{ ...S.td, borderRadius: "12px 0 0 12px", fontWeight: 800 }}>{item.name}</td>
+              <td style={{ ...S.td, color: "#64748b" }}>{item.total} Units</td>
+              <td style={{ ...S.td, fontWeight: 700, color: "#2563eb" }}>{item.stock} Units</td>
+              <td style={S.td}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button onClick={() => {
+                    setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, adjustment: p.adjustment - 1 } : p))
+                  }} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1.5px solid #e2e8f0", background: "#fff", cursor: "pointer", fontWeight: 900 }}>-</button>
+                  <span style={{ fontWeight: 900, fontSize: "1.1rem", width: "24px", textAlign: "center", color: item.adjustment > 0 ? "#16a34a" : item.adjustment < 0 ? "#dc2626" : "#0f172a" }}>
+                    {item.adjustment > 0 ? `+${item.adjustment}` : item.adjustment}
+                  </span>
+                  <button onClick={() => {
+                    setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, adjustment: p.adjustment + 1 } : p))
+                  }} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1.5px solid #2563eb", background: "#eff6ff", cursor: "pointer", color: "#2563eb", fontWeight: 900 }}>+</button>
+                </div>
+              </td>
+              <td style={S.td}>{item.sec}</td>
+              <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
+                <button onClick={() => {
+                    if (item.adjustment === 0) return;
+                    setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock + p.adjustment, adjustment: 0 } : p));
+                }} style={{ background: item.adjustment === 0 ? "#cbd5e1" : "#0f172a", color: "#fff", padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 700, cursor: item.adjustment === 0 ? "not-allowed" : "pointer", fontSize: "0.85rem", transition: "all .2s" }}>
+                  Commit
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderTransactionHistory = () => (
+    <div style={S.activitySection}>
+      <div style={S.sectionHeading}>📅 Personal Activity Log</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {[
+          { type: "Sale", msg: "Sold 1x MacBook Pro M3 Max", time: "10 mins ago", value: "-$3,499.00", icon: "💰" },
+          { type: "Adjustment", msg: "Inventory Correction (+5 Units)", time: "1 hour ago", value: "+$495.00", icon: "🔄" },
+          { type: "Stock Update", msg: "Received Batch #TX-9012 (Peripherals)", time: "3 hours ago", value: "Verified", icon: "📦" },
+          { type: "Sale", msg: "Sold 5x MX Master 3S Mouse", time: "Yesterday", value: "-$495.00", icon: "💰" },
+        ].map((tx, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: "20px", padding: "18px", background: "#fff", border: "1.5px solid #f1f5f9", borderRadius: "20px" }}>
+             <div style={{ fontSize: "1.4rem" }}>{tx.icon}</div>
+             <div style={{ flex: 1 }}>
+               <p style={{ fontWeight: 800, fontSize: "0.95rem" }}>{tx.msg}</p>
+               <p style={{ color: "#94a3b8", fontSize: "0.75rem", fontWeight: 700 }}>{tx.time} • Local Terminal #04</p>
+             </div>
+             <div style={{ textAlign: "right" }}>
+               <p style={{ fontWeight: 900, fontSize: "1rem", color: tx.type === "Sale" ? "#16a34a" : "#2563eb" }}>{tx.value}</p>
+               <span style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px", color: "#94a3b8" }}>{tx.type}</span>
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    // 🛡️ Security Guard: Check if the current role is authorized for the active item
+    const isAuthorized = current.menu.includes(activeItem);
+    
+    if (!isAuthorized) {
+      return (
+        <div style={{ padding: "40px", textAlign: "center", background: "#fef2f2", borderRadius: "24px", border: "1.5px solid #ef4444" }}>
+          <h3 style={{ color: "#991b1b", fontWeight: 800 }}>⚠️ Security Restriction</h3>
+          <p style={{ color: "#b91c1c", marginTop: "8px" }}>Your current profile (<strong>{role}</strong>) does not have authorization to access the <strong>{activeItem}</strong> module.</p>
+          <button style={{ ...S.btnPrimary, background: "#ef4444", marginTop: "20px" }} onClick={() => setActiveItem("Dashboard")}>Return to Safe Zone</button>
+        </div>
+      );
+    }
+
+    if (activeItem === "Dashboard") {
+      return role === "staff" ? renderStaffDashboard() : renderDashboard();
+    }
+    
+    if (activeItem === "User Roles") return renderUserRoles();
+    if (activeItem === "Audit Logs") return renderAuditLogs();
+    if (activeItem === "System Config") return renderSystemConfig();
+    
+    // Manager Views
+    if (activeItem === "Stock Orders") return renderStockOrders();
+    if (activeItem === "Shipment Tracking") return renderShipmentTracking();
+    if (activeItem === "Inventory Reports") return renderInventoryReports();
+    if (activeItem === "Suppliers") return renderSuppliers();
+
+    // Staff Views
+
+    if (activeItem === "Update Stock") return renderUpdateStock();
+    if (activeItem === "Transaction History") return renderTransactionHistory();
+
+    return (
+      <div style={{ 
+        display: "flex", flexDirection: "column", alignItems: "center", 
+        justifyContent: "center", height: "60vh", background: "#fff", 
+        borderRadius: "24px", border: "1.5px dashed #cbd5e1" 
+      }}>
+        <div style={{ fontSize: "3rem", marginBottom: "20px" }}>🚀</div>
+        <h3 style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "10px" }}>{activeItem} is Coming Soon</h3>
+        <p style={{ color: "#64748b", maxWidth: "400px", textAlign: "center" }}>
+          We are currently building the <strong>{activeItem}</strong> module to give you deeper insights into your manufacturing logistics. 
+        </p>
+      </div>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-
-        {/* 🔷 Header */}
-        <div className="flex items-center justify-between mb-8">
-
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-black text-white flex items-center justify-center rounded-2xl font-bold text-lg">
-              IT
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">InvenTrack</h1>
-              <p className="text-sm text-gray-500">Inventory System</p>
-            </div>
+    <div style={S.root}>
+      {/* ── Sidebar ── */}
+      <aside style={S.sidebar}>
+        <div style={S.sidebarBrand}>
+          <div style={{ padding: "8px", background: "rgba(37,99,235,0.15)", borderRadius: "14px", boxShadow: "0 8px 24px rgba(37,99,235,0.2)" }}>
+            <img src={logo} alt="Logo" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
           </div>
+          <span style={S.sidebarBrandName}>InvenTrack</span>
+        </div>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-4">
-            <span className="bg-white px-4 py-2 rounded-xl border text-sm text-gray-600">
-              👤 {isManager ? "Manager" : "Staff"}
-            </span>
-
-            <button
-              onClick={() => navigate("/products")}
-              className="bg-black text-white px-5 py-2 rounded-xl hover:bg-gray-800 transition"
+        <nav style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
+          {current.menu.map(m => (
+            <button 
+              key={m} 
+              style={{ ...S.sidebarItem, ...(activeItem === m ? S.sidebarItemActive : {}) }}
+              onClick={() => handleMenuClick(m)}
+              onMouseEnter={(e) => { if (activeItem !== m) { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.color = "#fff"; } }}
+              onMouseLeave={(e) => { if (activeItem !== m) { e.target.style.background = "transparent"; e.target.style.color = "#94a3b8"; } }}
             >
-              View Products →
+              {m}
             </button>
+          ))}
+        </nav>
 
-            <button
-              onClick={() => {
-                localStorage.removeItem("role");
-                navigate("/");
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
-          </div>
+        <div style={S.sidebarFooter}>
+          <button 
+            style={S.logoutBtn}
+            onClick={handleLogout}
+            onMouseEnter={(e) => { e.target.style.background = "#ef4444"; e.target.style.color = "#fff"; e.target.style.boxShadow = "0 8px 20px rgba(239,68,68,0.3)"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(239,68,68,0.1)"; e.target.style.color = "#ef4444"; e.target.style.boxShadow = "none"; }}
+          >
+            Sign Out
+          </button>
         </div>
+      </aside>
 
-        {/* 🔷 Welcome Card */}
-        <div className="bg-gradient-to-r from-black to-gray-800 text-white p-6 rounded-3xl mb-8 shadow-md">
-          <h2 className="text-2xl font-semibold mb-2">
-            Welcome back 👋
-          </h2>
-          <p className="text-gray-300">
-            Manage your inventory, track stock levels and monitor product performance easily.
-          </p>
-        </div>
-
-        {/* 🔷 Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-md transition">
-            <p className="text-gray-500 text-sm">Total Products</p>
-            <h2 className="text-4xl font-bold mt-2">7</h2>
-            <p className="text-xs text-gray-400 mt-1">Available in system</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-md transition">
-            <p className="text-gray-500 text-sm">Low Stock</p>
-            <h2 className="text-4xl font-bold text-red-500 mt-2">3</h2>
-            <p className="text-xs text-gray-400 mt-1">Needs attention</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border hover:shadow-md transition">
-            <p className="text-gray-500 text-sm">Suppliers</p>
-            <h2 className="text-4xl font-bold mt-2">5</h2>
-            <p className="text-xs text-gray-400 mt-1">Active partners</p>
-          </div>
-
-        </div>
-
-        {/* 🔷 Bottom Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Activity */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border">
-            <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-
-            <div className="space-y-4 text-sm text-gray-600">
-              <div className="flex justify-between">
-                <span>HDMI Cable updated</span>
-                <span className="text-gray-400">Today</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Laptop Stand low stock</span>
-                <span className="text-red-500">Alert</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>New product added</span>
-                <span className="text-green-600">Success</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stock Insights */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border">
-            <h3 className="text-lg font-semibold mb-4">Stock Insights</h3>
-
-            <div className="space-y-4">
-              <div className="flex justify-between bg-gray-50 p-4 rounded-xl">
-                <div>
-                  <p className="font-medium">Highest Stock</p>
-                  <p className="text-sm text-gray-500">HDMI Cable</p>
-                </div>
-                <span className="font-bold text-lg">67</span>
-              </div>
-
-              <div className="flex justify-between bg-gray-50 p-4 rounded-xl">
-                <div>
-                  <p className="font-medium">Lowest Stock</p>
-                  <p className="text-sm text-gray-500">Laptop Stand</p>
-                </div>
-                <span className="font-bold text-red-500 text-lg">3</span>
-              </div>
-
-              <div className="flex justify-between bg-gray-50 p-4 rounded-xl">
-                <div>
-                  <p className="font-medium">Stock Status</p>
-                  <p className="text-sm text-gray-500">Overall health</p>
-                </div>
-                <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm">
-                  Stable
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
+      {/* ── Main ── */}
+      <main style={S.main}>
+        {renderGlobalHeader()}
+        {renderContent()}
+      </main>
     </div>
   );
 }
