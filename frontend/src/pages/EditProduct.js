@@ -131,6 +131,19 @@ const S = {
   },
 };
 
+const INITIAL_PRODUCTS = [
+  { id: "PRD-2031", name: "Corporate Workstation", category: "Hardware", total: 45, current: 38, price: "$2,400" },
+  { id: "PRD-2032", name: "UltraSharp Display 32\"", category: "Monitor", total: 20, current: 4, price: "$899" },
+  { id: "PRD-2033", name: "Logitech MX Master 3S", category: "Peripheral", total: 100, current: 85, price: "$99" },
+  { id: "PRD-2034", name: "Steelcase Gesture Chair", category: "Furniture", total: 12, current: 2, price: "$1,300" },
+  { id: "PRD-2035", name: "MacBook Pro M3 Max", category: "Laptops", total: 15, current: 15, price: "$3,499" },
+  { id: "PRD-2036", name: "Dell Precision Tower", category: "Hardware", total: 8, current: 0, price: "$4,200" },
+  { id: "PRD-2037", name: "Sony WH-1000XM5", category: "Audio", total: 30, current: 22, price: "$399" },
+  { id: "PRD-2038", name: "iPad Pro 12.9\"", category: "Tablets", total: 25, current: 10, price: "$1,099" },
+  { id: "PRD-2039", name: "Herman Miller Aeron", category: "Furniture", total: 10, current: 8, price: "$1,500" },
+  { id: "PRD-2040", name: "Samsung Odyssey G9", category: "Monitor", total: 5, current: 1, price: "$1,299" },
+];
+
 function EditProduct({ isNew = false }) {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -159,14 +172,20 @@ function EditProduct({ isNew = false }) {
 
     // Mock loading existing data if not new
     if (!isNew && id) {
-      // In a real app, fetch from API. Here we mock.
-      setForm({
-        name: "Corporate Workstation",
-        category: "Hardware",
-        price: "$2,400",
-        total: "45",
-        current: "38",
-      });
+      const saved = localStorage.getItem("inventrack_products");
+      if (saved) {
+        const productsList = JSON.parse(saved);
+        const item = productsList.find(p => p.id === id);
+        if (item) {
+          setForm({
+            name: item.name,
+            category: item.category,
+            price: item.price,
+            total: item.total.toString(),
+            current: item.current.toString(),
+          });
+        }
+      }
     }
 
     /* Inject Fonts & Animations */
@@ -191,8 +210,27 @@ function EditProduct({ isNew = false }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulate API call
-    console.log("Saving Asset:", form);
+    
+    // 📦 Retrieve current manifest
+    const saved = localStorage.getItem("inventrack_products");
+    let productsList = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+
+    const productData = {
+      id: isNew ? `PRD-${Date.now().toString().slice(-4)}` : id,
+      name: form.name,
+      category: form.category,
+      price: form.price.startsWith("$") ? form.price : `$${form.price}`,
+      total: parseInt(form.total),
+      current: parseInt(form.current),
+    };
+
+    if (isNew) {
+      productsList.push(productData);
+    } else {
+      productsList = productsList.map(p => (p.id === id ? productData : p));
+    }
+
+    localStorage.setItem("inventrack_products", JSON.stringify(productsList));
     navigate("/products");
   };
 
@@ -209,11 +247,7 @@ function EditProduct({ isNew = false }) {
           <img src={logo} alt="IT" style={S.logoImg} />
           <span style={S.logoName}>InvenTrack</span>
         </div>
-        <div>
-          <button style={{ ...S.btnPrimary, flex: "none", height: "40px", background: "none", border: "1.5px solid #e2e8f0", color: "#64748b", boxShadow: "none", fontWeight: "700", padding: "0 16px" }} onClick={() => navigate("/products")}>
-            × Cancel
-          </button>
-        </div>
+        <div />
       </header>
 
       <div className="it-fade-up" style={{ width: "100%" }}>

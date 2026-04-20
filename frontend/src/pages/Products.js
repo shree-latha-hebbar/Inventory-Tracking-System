@@ -201,6 +201,14 @@ const INITIAL_PRODUCTS = [
   { id: "PRD-2034", name: "Steelcase Gesture Chair", category: "Furniture", total: 12, current: 2, price: "$1,300" },
   { id: "PRD-2035", name: "MacBook Pro M3 Max", category: "Laptops", total: 15, current: 15, price: "$3,499" },
   { id: "PRD-2036", name: "Dell Precision Tower", category: "Hardware", total: 8, current: 0, price: "$4,200" },
+  { id: "PRD-2037", name: "Sony WH-1000XM5", category: "Audio", total: 30, current: 22, price: "$399" },
+  { id: "PRD-2038", name: "iPad Pro 12.9\"", category: "Tablets", total: 25, current: 10, price: "$1,099" },
+  { id: "PRD-2039", name: "Herman Miller Aeron", category: "Furniture", total: 10, current: 8, price: "$1,500" },
+  { id: "PRD-2040", name: "Samsung Odyssey G9", category: "Monitor", total: 5, current: 1, price: "$1,299" },
+  { id: "PRD-2041", name: "Blue Yeti Microphone", category: "Audio", total: 15, current: 12, price: "$129" },
+  { id: "PRD-2042", name: "Keychron K2 Keyboard", category: "Peripheral", total: 40, current: 35, price: "$89" },
+  { id: "PRD-2043", name: "Steelcase Leap V2", category: "Furniture", total: 8, current: 5, price: "$1,100" },
+  { id: "PRD-2044", name: "Dell UltraSharp 27\"", category: "Monitor", total: 15, current: 10, price: "$499" },
 ];
 
 function Products() {
@@ -208,7 +216,13 @@ function Products() {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  
+  // 📦 Load from Storage or Fallback to INITIAL_PRODUCTS
+  const [products, setProducts] = useState(() => {
+    const saved = localStorage.getItem("inventrack_products");
+    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+  });
+  
   const [role, setRole] = useState("staff");
   const [viewingAsset, setViewingAsset] = useState(null);
 
@@ -242,17 +256,21 @@ function Products() {
 
   const handleDelete = (id, name) => {
     if (window.confirm(`⚠️ ARE YOU SURE?\n\nDeleting "${name}" is a permanent action.`)) {
-      setProducts(prev => prev.filter(p => p.id !== id));
+      const updated = products.filter(p => p.id !== id);
+      setProducts(updated);
+      localStorage.setItem("inventrack_products", JSON.stringify(updated));
     }
   };
 
   const handleStockUpdate = (id) => {
     const newVal = window.prompt("Enter new Stock Counter (Current Quantity):");
     if (newVal !== null && !isNaN(newVal)) {
-      setProducts(prev => prev.map(p => {
+      const updated = products.map(p => {
         if (p.id === id) return { ...p, current: parseInt(newVal) };
         return p;
-      }));
+      });
+      setProducts(updated);
+      localStorage.setItem("inventrack_products", JSON.stringify(updated));
     }
   };
 
@@ -288,27 +306,28 @@ function Products() {
           }}>
             <style>{`@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
             
-            {/* BACK BUTTON */}
-            <button 
-              onClick={() => setViewingAsset(null)}
-              style={{ 
-                background: "#f1f5f9", border: "none", color: "#64748b",
-                padding: "10px 18px", borderRadius: "12px", cursor: "pointer", 
-                fontWeight: "800", fontSize: "0.85rem", display: "flex",
-                alignItems: "center", gap: "8px", marginBottom: "32px",
-                transition: "all .2s"
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#64748b"; }}
-            >
-              ← Return to Vault
-            </button>
             
             <div style={{ marginBottom: "32px" }}>
               <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#2563eb", background: "#eff6ff", padding: "6px 14px", borderRadius: "10px", marginBottom: "16px", display: "inline-block" }}>
                 ASSET PROFILE
               </span>
-              <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.5px" }}>{viewingAsset.name}</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.5px", margin: 0 }}>{viewingAsset.name}</h2>
+                <button 
+                  onClick={() => setViewingAsset(null)}
+                  style={{ 
+                    background: "#f1f5f9", border: "none", color: "#64748b",
+                    padding: "8px 16px", borderRadius: "12px", cursor: "pointer", 
+                    fontWeight: "800", fontSize: "0.8rem", display: "flex",
+                    alignItems: "center", gap: "6px",
+                    transition: "all .2s"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#64748b"; }}
+                >
+                  ← BACK
+                </button>
+              </div>
               <p style={{ color: "#64748b", marginTop: "8px", fontWeight: "700" }}>ASSET ID: {viewingAsset.id}</p>
             </div>
 

@@ -103,7 +103,12 @@ function Transactions() {
   const role = (localStorage.getItem("role") || "").trim().toLowerCase();
   const isManager = role === "manager";
   
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
+  // 📦 Load from Storage or Fallback
+  const [transactions, setTransactions] = useState(() => {
+    const saved = localStorage.getItem("inventrack_transactions");
+    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+  });
+  
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [newTxn, setNewTxn] = useState({
     product: OFFICIAL_PRODUCTS[0],
@@ -146,7 +151,10 @@ function Transactions() {
       status: "Completed"
     };
 
-    setTransactions([freshTxn, ...transactions]);
+    const updated = [freshTxn, ...transactions];
+    setTransactions(updated);
+    localStorage.setItem("inventrack_transactions", JSON.stringify(updated));
+    
     setIsDrawerOpen(false);
     setNewTxn({ product: OFFICIAL_PRODUCTS[0], type: "IN", quantity: 1 });
   };

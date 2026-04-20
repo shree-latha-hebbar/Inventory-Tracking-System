@@ -10,6 +10,7 @@ import EditProduct from "./pages/EditProduct";
 import AboutUs from "./pages/AboutUs";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Report";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/add-product" element={<EditProduct isNew={true} />} />
         <Route path="/edit-product/:id" element={<EditProduct />} />
-
+        <Route path="/contact" element={<Contact />} />
         {/* Redirect unknown routes to Home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

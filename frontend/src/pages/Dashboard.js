@@ -251,6 +251,17 @@ function Dashboard() {
   const navigate = useNavigate();
   const [role, setRole] = useState("");
   const [activeItem, setActiveItem] = useState("Dashboard");
+  
+  // 📦 Load Real Data from Persistence
+  const [products, setProducts] = useState(() => {
+    const saved = localStorage.getItem("inventrack_products");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [transactions, setTransactions] = useState(() => {
+    const saved = localStorage.getItem("inventrack_transactions");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [stockItems, setStockItems] = useState([
     { id: 1, name: "Steelcase Gesture Chair", stock: 12, total: 20, sec: "NW-Floor", adjustment: 0 },
     { id: 2, name: "MacBook Pro M3 Max", stock: 15, total: 30, sec: "Secure-Vault", adjustment: 0 },
@@ -298,7 +309,7 @@ function Dashboard() {
       color: "#2563eb",
       icon: "📦",
       label: "Operations Manager",
-      menu: ["Dashboard", "Manage Products", "Stock Orders", "Shipment Tracking", "Inventory Reports", "Suppliers"]
+      menu: ["Dashboard", "Manage Products", "Stock Orders", "Inventory Reports", "Suppliers"]
     },
     staff: {
       color: "#0ea5e9",
@@ -314,8 +325,14 @@ function Dashboard() {
       return;
     }
     setActiveItem(m);
-    if (m.toLowerCase().includes("product")) {
+    if (m.toLowerCase().includes("product") || m.toLowerCase().includes("asset")) {
       navigate("/products");
+    }
+    if (m.toLowerCase().includes("report")) {
+      navigate("/reports");
+    }
+    if (m.toLowerCase().includes("transaction") || m.toLowerCase().includes("history")) {
+      navigate("/transactions");
     }
   };
 
@@ -350,148 +367,159 @@ function Dashboard() {
     </div>
   );
 
-  const renderDashboard = () => (
-    <>
-      <div style={S.kpiGrid} className="it-fade-up">
-        {/* Total Order */}
-        <div style={S.kpiCard("#2563eb")}>
-          <span style={S.kpiLabel}>Total Order</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>387</h2>
-            <span style={S.kpiTrend(true)}>↑ 10%</span>
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
-        </div>
-        {/* Total Revenue */}
-        <div style={S.kpiCard("#10b981")}>
-          <span style={S.kpiLabel}>Total Revenue</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#065f46" }}>$80,260</h2>
-            <span style={S.kpiTrend(true)}>↑ 5%</span>
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
-        </div>
-        {/* Delivered Order */}
-        <div style={S.kpiCard("#f59e0b")}>
-          <span style={S.kpiLabel}>Delivered Order</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#92400e" }}>45</h2>
-            <span style={S.kpiTrend(false)}>↓ 10%</span>
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
-        </div>
-        {/* Outstanding Delivered */}
-        <div style={S.kpiCard("#ef4444")}>
-          <span style={S.kpiLabel}>Outstanding Delivered</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#991b1b" }}>12</h2>
-            <span style={S.kpiTrend(true)}>↑ 2%</span>
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Compared to Last Month</p>
-        </div>
-      </div>
+  const renderDashboard = () => {
+    const totalValue = products.reduce((acc, p) => {
+      const priceNum = typeof p.price === 'string' ? parseInt(p.price.replace(/[^0-9]/g, "")) : 0;
+      return acc + (priceNum * p.current);
+    }, 0);
 
-      <div style={S.analyticsGrid} className="it-fade-up it-delay-1">
-        <div style={S.standardCard("#2563eb")}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "26px" }}>
-            <div>
-              <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Sales Analytics</h3>
-              <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>$190,790</h1>
+    const inventoryCount = products.reduce((acc, p) => acc + p.current, 0);
+    const criticalCount = products.filter(p => p.current <= 5).length;
+    const shipmentCount = transactions.filter(t => t.type === "IN").length;
+
+    return (
+      <>
+        <div style={S.kpiGrid} className="it-fade-up">
+          {/* Total Assets Value */}
+          <div style={S.kpiCard("#2563eb")}>
+            <span style={S.kpiLabel}>Inventory Value</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>${totalValue.toLocaleString()}</h2>
+              <span style={S.kpiTrend(true)}>↑ 100%</span>
             </div>
-            <select style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569" }}>
-              <option>Monthly View</option>
-              <option>Weekly View</option>
-            </select>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Live Global Valuation</p>
           </div>
-          <div style={{ height: "220px", width: "100%" }}>
-            <SapphireLineChart />
+          {/* Total Assets Count */}
+          <div style={S.kpiCard("#10b981")}>
+            <span style={S.kpiLabel}>Operational Assets</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#065f46" }}>{inventoryCount}</h2>
+              <span style={S.kpiTrend(true)}>Active</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Units in Vault</p>
+          </div>
+          {/* Critical Items */}
+          <div style={S.kpiCard("#ef4444")}>
+            <span style={S.kpiLabel}>Critical Stock</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#991b1b" }}>{criticalCount}</h2>
+              <span style={S.kpiTrend(false)}>Alert</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Below Reorder Point</p>
+          </div>
+          {/* Total Shipments */}
+          <div style={S.kpiCard("#f59e0b")}>
+            <span style={S.kpiLabel}>Recent In-Flows</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#92400e" }}>{shipmentCount}</h2>
+              <span style={S.kpiTrend(true)}>↑</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Incoming Shipments</p>
           </div>
         </div>
 
-        <div style={S.standardCard("#3b82f6")}>
-           <h3 style={S.cardTitle}>Top Selling Products</h3>
-           <div style={{ paddingTop: "8px" }}>
-             <SapphireHorizontalBar name="Laptop UltraBook M3" value={8.5} color="#2563eb" />
-             <SapphireHorizontalBar name="Wireless Mouse Pro" value={6.2} color="#3b82f6" />
-             <SapphireHorizontalBar name="Printer Canon L-Series" value={4.8} color="#60a5fa" />
-             <SapphireHorizontalBar name="Monitor 4K OLED" value={3.9} color="#93c5fd" />
-           </div>
-        </div>
-      </div>
+        <div style={S.analyticsGrid} className="it-fade-up it-delay-1">
+          <div style={S.standardCard("#2563eb")}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "26px" }}>
+              <div>
+                <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Sales Analytics</h3>
+                <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>$190,790</h1>
+              </div>
+              <select style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569" }}>
+                <option>Monthly View</option>
+                <option>Weekly View</option>
+              </select>
+            </div>
+            <div style={{ height: "220px", width: "100%" }}>
+              <SapphireLineChart />
+            </div>
+          </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "24px" }} className="it-fade-up it-delay-2">
-         {/* Replenishment Table */}
-         <div style={S.standardCard("#ef4444")}>
-           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-             <h3 style={S.cardTitle}>Replenishment Alerts</h3>
-             <button style={{ background: "rgba(37,99,235,0.08)", border: "none", color: "#2563eb", fontWeight: "900", fontSize: "0.78rem", cursor: "pointer", padding: "6px 14px", borderRadius: "10px" }} onClick={() => navigate("/products")}>View Inventory</button>
-           </div>
-           <table style={S.table}>
-             <thead>
-               <tr>
-                 <th style={S.th}>Asset</th>
-                 <th style={S.th}>SKU</th>
-                 <th style={S.th}>Qty</th>
-                 <th style={S.th}>Level</th>
-               </tr>
-             </thead>
-             <tbody>
-               {[
-                 { name: "Laptop HP G9", sku: "HP-10102", qty: 3, status: "#ef4444" },
-                 { name: "HDMI 2.1 Cable", sku: "HD-32101", qty: 8, status: "#f59e0b" },
-                 { name: "Magic Mouse 2", sku: "MM-90221", qty: 2, status: "#ef4444" },
-               ].map((row, i) => (
-                 <tr key={i}>
-                   <td style={S.td}>{row.name}</td>
-                   <td style={S.td}>{row.sku}</td>
-                   <td style={S.td}>{row.qty}</td>
-                   <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
+          <div style={S.standardCard("#3b82f6")}>
+             <h3 style={S.cardTitle}>Top Selling Products</h3>
+             <div style={{ paddingTop: "8px" }}>
+               <SapphireHorizontalBar name="Laptop UltraBook M3" value={8.5} color="#2563eb" />
+               <SapphireHorizontalBar name="Wireless Mouse Pro" value={6.2} color="#3b82f6" />
+               <SapphireHorizontalBar name="Printer Canon L-Series" value={4.8} color="#60a5fa" />
+               <SapphireHorizontalBar name="Monitor 4K OLED" value={3.9} color="#93c5fd" />
+             </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "24px" }} className="it-fade-up it-delay-2">
+           {/* Replenishment Table */}
+           <div style={S.standardCard("#ef4444")}>
+             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+               <h3 style={S.cardTitle}>Replenishment Alerts</h3>
+               <button style={{ background: "rgba(37,99,235,0.08)", border: "none", color: "#2563eb", fontWeight: "900", fontSize: "0.78rem", cursor: "pointer", padding: "6px 14px", borderRadius: "10px" }} onClick={() => navigate("/products")}>View Inventory</button>
+             </div>
+             <table style={S.table}>
+               <thead>
+                 <tr>
+                   <th style={S.th}>Asset</th>
+                   <th style={S.th}>SKU</th>
+                   <th style={S.th}>Qty</th>
+                   <th style={S.th}>Level</th>
                  </tr>
-               ))}
-             </tbody>
-           </table>
-         </div>
+               </thead>
+               <tbody>
+                 {[
+                   { name: "Laptop HP G9", sku: "HP-10102", qty: 3, status: "#ef4444" },
+                   { name: "HDMI 2.1 Cable", sku: "HD-32101", qty: 8, status: "#f59e0b" },
+                   { name: "Magic Mouse 2", sku: "MM-90221", qty: 2, status: "#ef4444" },
+                 ].map((row, i) => (
+                   <tr key={i}>
+                     <td style={S.td}>{row.name}</td>
+                     <td style={S.td}>{row.sku}</td>
+                     <td style={S.td}>{row.qty}</td>
+                     <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
 
-         {/* Stats Donut 1 */}
-         <div style={S.standardCard("#f59e0b")}>
-           <h3 style={S.cardTitle}>Sales Channel</h3>
-           <div style={{ padding: "10px 0" }}>
-            <SapphireDonut 
-              centerValue="$120k"
-              data={[{val: 45, color: "#1e3a8a"}, {val: 30, color: "#3b82f6"}, {val: 25, color: "#f59e0b"}]} 
-            />
+           {/* Stats Donut 1 */}
+           <div style={S.standardCard("#f59e0b")}>
+             <h3 style={S.cardTitle}>Sales Channel</h3>
+             <div style={{ padding: "10px 0" }}>
+              <SapphireDonut 
+                centerValue="$120k"
+                data={[{val: 45, color: "#1e3a8a"}, {val: 30, color: "#3b82f6"}, {val: 25, color: "#f59e0b"}]} 
+              />
+             </div>
+             <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
+                <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1e3a8a" }} /> Online Distribution (45%)
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} /> Offline Retail (30%)
+                </div>
+             </div>
            </div>
-           <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
-              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1e3a8a" }} /> Online Distribution (45%)
-              </div>
-              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} /> Offline Retail (30%)
-              </div>
-           </div>
-         </div>
 
-         {/* Stats Donut 2 */}
-         <div style={S.standardCard("#10b981")}>
-           <h3 style={S.cardTitle}>User Distribution</h3>
-           <div style={{ padding: "10px 0" }}>
-            <SapphireDonut 
-              centerValue="70+"
-              data={[{val: 52, color: "#10b981"}, {val: 18, color: "#2563eb"}, {val: 30, color: "#6366f1"}]} 
-            />
+           {/* Stats Donut 2 */}
+           <div style={S.standardCard("#10b981")}>
+             <h3 style={S.cardTitle}>User Distribution</h3>
+             <div style={{ padding: "10px 0" }}>
+              <SapphireDonut 
+                centerValue="70+"
+                data={[{val: 52, color: "#10b981"}, {val: 18, color: "#2563eb"}, {val: 30, color: "#6366f1"}]} 
+              />
+             </div>
+             <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
+                <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Operational Staff (52%)
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Administrators (18%)
+                </div>
+             </div>
            </div>
-           <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
-              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Operational Staff (52%)
-              </div>
-              <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Administrators (18%)
-              </div>
-           </div>
-         </div>
-      </div>
-    </>
-  );
+        </div>
+      </>
+    );
+  };
 
   const renderStaffDashboard = () => (
     <div className="it-fade-up">
@@ -746,38 +774,6 @@ function Dashboard() {
     </div>
   );
 
-  const renderShipmentTracking = () => (
-    <div style={S.activitySection}>
-      <div style={S.sectionHeading}>🚢 Supply Chain Logistics Monitor</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-        {[
-          { id: "SHIP-101", origin: "HK Hub", destiny: "Main WH", status: "On Route", progress: 75, carrier: "DHL Express" },
-          { id: "SHIP-102", origin: "Logistics HQ", destiny: "Main WH", status: "Dispatching", progress: 15, carrier: "In-House Logistics" },
-          { id: "SHIP-103", origin: "Steelcase Factory", destiny: "Main WH", status: "Arrived", progress: 100, carrier: "FedEx Freight" },
-        ].map((s, i) => (
-          <div key={i} style={{ padding: "24px", background: "#f8fafc", borderRadius: "24px", border: "1px solid #e2e8f0" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-              <div>
-                <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#1e293b" }}>{s.id}</span>
-                <span style={{ marginLeft: "12px", color: "#64748b", fontSize: "0.9rem" }}>Carrier: {s.carrier}</span>
-              </div>
-              <span style={{ ...S.badge, background: s.progress === 100 ? "#dcfce7" : "#dbeafe", color: s.progress === 100 ? "#166534" : "#1e40af" }}>
-                {s.status}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", fontWeight: 700, color: "#94a3b8", marginBottom: "8px" }}>
-              <span>{s.origin}</span>
-              <span>{s.destiny}</span>
-            </div>
-            <div style={{ height: "8px", background: "#e2e8f0", borderRadius: "4px", position: "relative", overflow: "hidden" }}>
-              <div style={{ width: s.progress + "%", height: "100%", background: "#2563eb", borderRadius: "4px", transition: "width 1s ease-in-out" }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   const renderInventoryReports = () => (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
       <div style={S.activitySection}>
@@ -946,7 +942,6 @@ function Dashboard() {
     
     // Manager Views
     if (activeItem === "Stock Orders") return renderStockOrders();
-    if (activeItem === "Shipment Tracking") return renderShipmentTracking();
     if (activeItem === "Inventory Reports") return renderInventoryReports();
     if (activeItem === "Suppliers") return renderSuppliers();
 
