@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 // Assets imports
 import logo from "../assets/logo.png";
@@ -805,12 +805,12 @@ export default function Home() {
             </li>
           ))}
           <li>
-            <button
-              style={S.navLink}
-              onClick={goContact}
+            <Link 
+              to="/contact" 
+              style={{ ...S.navLink, textDecoration: "none", display: "inline-block" }}
               onMouseEnter={(e) => { e.target.style.background = "#f0f6ff"; e.target.style.color = "#2563eb"; }}
               onMouseLeave={(e) => { e.target.style.background = "transparent"; e.target.style.color = "#374151"; }}
-            >Contact</button>
+            >Contact</Link>
           </li>
           <li>
             <button
@@ -857,7 +857,7 @@ export default function Home() {
               onMouseLeave={(e) => { e.target.style.background = "transparent"; }}
             >{l}</button>
           ))}
-          <button style={S.mobileLink} onClick={goContact}>Contact</button>
+          <Link to="/contact" style={{ ...S.mobileLink, textDecoration: "none" }}>Contact</Link>
           <button style={S.mobileLink} onClick={goAbout}>About Us</button>
           <button style={S.mobileSignIn} onClick={goLogin}>Sign In →</button>
         </div>
@@ -1042,61 +1042,10 @@ export default function Home() {
       </section>
 
 
-      {/* ── Contact ── */}
-      <section id="contact" style={{ ...S.section, background: "#f8faff" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }} className="it-footer-grid">
-          <div>
-            <div style={S.sectionTag}>Manufacturer Support</div>
-            <h2 style={S.sectionH2}>Direct Logistics & Distribution</h2>
-            <p style={S.sectionSub}>
-              Questions about bulk manufacturing, supply chain logistics, or factory-direct distribution? Our industrial support team is ready to assist.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "30px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                <div style={{ ...S.featureIconWrap, width: "40px", height: "40px", background: "#dbeafe", marginBottom: 0, fontSize: "18px" }}>🏭</div>
-                <div>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>InvenTrack Mfg & Co.</div>
-                  <div style={{ fontSize: "0.95rem", color: "#0f172a", fontWeight: "700" }}>Industrial Park, New City</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                <div style={{ ...S.featureIconWrap, width: "40px", height: "40px", background: "#dcfce7", marginBottom: 0, fontSize: "18px" }}>📞</div>
-                <div>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>Direct Support</div>
-                  <div style={{ fontSize: "0.95rem", color: "#0f172a", fontWeight: "700" }}>+1 (555) 789-0123</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                <div style={{ ...S.featureIconWrap, width: "40px", height: "40px", background: "#fce7f3", marginBottom: 0, fontSize: "18px" }}>📧</div>
-                <div>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>Logistics Email</div>
-                  <div style={{ fontSize: "0.95rem", color: "#0f172a", fontWeight: "700" }}>logistics@inventrack-mfg.com</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{ background: "#fff", padding: "40px", borderRadius: "24px", boxShadow: "0 20px 50px rgba(59,130,246,0.08)", border: "1px solid #e2e8f0" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "700", marginBottom: "6px", color: "#374151" }}>Full Name</label>
-                <input type="text" placeholder="John Doe" style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f9fafb", fontSize: "0.9rem" }} />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "700", marginBottom: "6px", color: "#374151" }}>Work Email</label>
-                <input type="email" placeholder="john@company.com" style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f9fafb", fontSize: "0.9rem" }} />
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "700", marginBottom: "6px", color: "#374151" }}>Message</label>
-                <textarea placeholder="Tell us about your requirements..." rows="4" style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f9fafb", fontSize: "0.9rem", resize: "none" }} />
-              </div>
-              <button style={{ ...S.btnPrimary, width: "100%", marginTop: "10px" }}>Send Message →</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Redundant Contact Section Removed - User directed to /contact */}
 
       {/* ── Footer ── */}
-      <footer id="contact" style={S.footer}>
+      <footer style={S.footer}>
         <div style={S.footerGrid} className="it-footer-grid">
           <div>
             <div style={S.footerBrand}>
@@ -1121,12 +1070,12 @@ export default function Home() {
                 </li>
               ))}
               <li>
-                <a
-                  style={S.footerLink}
-                  onClick={goContact}
+                <Link 
+                  to="/contact" 
+                  style={{ ...S.footerLink, textDecoration: "none" }}
                   onMouseEnter={(e) => { e.target.style.color = "#93c5fd"; }}
                   onMouseLeave={(e) => { e.target.style.color = "#94a3b8"; }}
-                >Contact</a>
+                >Contact</Link>
               </li>
             </ul>
           </div>
