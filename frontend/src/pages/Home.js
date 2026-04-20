@@ -737,6 +737,7 @@ export default function Home() {
 
   const goLogin = () => navigate("/login");
   const goAbout = () => navigate("/about");
+  const goContact = () => navigate("/contact");
 
   /* Inject keyframes & Google Font once */
   useEffect(() => {
@@ -793,7 +794,7 @@ export default function Home() {
 
         {/* Desktop links */}
         <ul style={S.navLinks} className="it-nav-links">
-          {["Features", "Contact"].map((l) => (
+          {["Features"].map((l) => (
             <li key={l}>
               <button
                 style={S.navLink}
@@ -803,6 +804,14 @@ export default function Home() {
               >{l}</button>
             </li>
           ))}
+          <li>
+            <button
+              style={S.navLink}
+              onClick={goContact}
+              onMouseEnter={(e) => { e.target.style.background = "#f0f6ff"; e.target.style.color = "#2563eb"; }}
+              onMouseLeave={(e) => { e.target.style.background = "transparent"; e.target.style.color = "#374151"; }}
+            >Contact</button>
+          </li>
           <li>
             <button
               style={S.navLink}
@@ -839,7 +848,7 @@ export default function Home() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div style={S.mobileMenu}>
-          {["Features", "Contact"].map((l) => (
+          {["Features"].map((l) => (
             <button
               key={l}
               style={S.mobileLink}
@@ -848,6 +857,7 @@ export default function Home() {
               onMouseLeave={(e) => { e.target.style.background = "transparent"; }}
             >{l}</button>
           ))}
+          <button style={S.mobileLink} onClick={goContact}>Contact</button>
           <button style={S.mobileLink} onClick={goAbout}>About Us</button>
           <button style={S.mobileSignIn} onClick={goLogin}>Sign In →</button>
         </div>
@@ -1100,7 +1110,7 @@ export default function Home() {
           <div>
             <div style={S.footerHeading}>Quick Links</div>
             <ul style={S.footerLinks}>
-              {["Features", "Contact"].map((l) => (
+              {["Features"].map((l) => (
                 <li key={l}>
                   <a
                     style={S.footerLink}
@@ -1110,6 +1120,14 @@ export default function Home() {
                   >{l}</a>
                 </li>
               ))}
+              <li>
+                <a
+                  style={S.footerLink}
+                  onClick={goContact}
+                  onMouseEnter={(e) => { e.target.style.color = "#93c5fd"; }}
+                  onMouseLeave={(e) => { e.target.style.color = "#94a3b8"; }}
+                >Contact</a>
+              </li>
             </ul>
           </div>
           <div>

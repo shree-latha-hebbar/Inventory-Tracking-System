@@ -196,6 +196,7 @@ function AboutUs() {
         </div>
         <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
           <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#2563eb", cursor: "pointer", textTransform: "uppercase", borderBottom: "2px solid #2563eb" }}>About Us</span>
+          <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b", cursor: "pointer", textTransform: "uppercase" }} onClick={() => navigate("/contact")}>Contact</span>
           <button style={S.btnPrimary} onClick={() => navigate("/login")}>Get Started</button>
         </div>
       </header>
