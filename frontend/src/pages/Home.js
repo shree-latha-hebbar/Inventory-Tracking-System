@@ -674,14 +674,14 @@ const FEATURES = [
 ];
 
 const WORKFLOW = [
-  { num: 1, icon: "🔐", title: "User Login", desc: "Authenticate with role-based credentials" },
-  { num: 2, icon: "✅", title: "Authentication", desc: "Token issued, permissions loaded" },
-  { num: 3, icon: "🔍", title: "View / Search", desc: "Browse and filter product catalogue" },
-  { num: 4, icon: "📊", title: "Check Stock", desc: "Review real-time inventory levels" },
-  { num: 5, icon: "🛒", title: "Reorder", desc: "Raise purchase requests for low stock" },
-  { num: 6, icon: "📥", title: "Stock Arrival", desc: "Update quantities on new deliveries" },
-  { num: 7, icon: "💰", title: "Product Sale", desc: "Deduct stock on confirmed sales" },
-  { num: 8, icon: "📋", title: "Report", desc: "Generate summaries and receive alerts" },
+  { num: 1, icon: "🔐", title: "Secure Perimeter Access", desc: "Enterprise-grade authentication with multi-factor role validation.", shadow: "rgba(37, 99, 235, 0.1)" },
+  { num: 2, icon: "✅", title: "Logic Verification Gate", desc: "System protocols establish persistent permission tokens.", shadow: "rgba(16, 185, 129, 0.1)" },
+  { num: 3, icon: "🔍", title: "Real-time Engine Scan", desc: "Dynamic scanning across unified logistics databases.", shadow: "rgba(59, 130, 246, 0.1)" },
+  { num: 4, icon: "📊", title: "Ledger Equilibrium Check", desc: "Sub-second verification of global stock liquidity levels.", shadow: "rgba(37, 99, 235, 0.1)" },
+  { num: 5, icon: "🛒", title: "Procurement Threshold Trigger", desc: "Automated replenishment logic based on predictive analytics.", shadow: "rgba(37, 99, 235, 0.1)" },
+  { num: 6, icon: "📥", title: "Warehouse Intake Sync", desc: "Real-time reconciliation of physical stock arrivals.", shadow: "rgba(16, 185, 129, 0.1)" },
+  { num: 7, icon: "💰", title: "Dispatch Ledger Entry", desc: "Automated transaction logging for high-velocity sales.", shadow: "rgba(59, 130, 246, 0.1)" },
+  { num: 8, icon: "📋", title: "Logistics Analytics Intel", desc: "Generating strategic summaries for operational intelligence.", shadow: "rgba(37, 99, 235, 0.1)" },
 ];
 
 const ROLES = [
@@ -1004,39 +1004,96 @@ export default function Home() {
           ))}
         </div>
       </section>
-      {/* ── Workflow ── */}
-      <section style={S.section}>
-        <div style={{ textAlign: "center", marginBottom: "50px" }}>
-          <div style={{ ...S.sectionTag, display: "block", width: "fit-content", margin: "0 auto 14px" }}>System Workflow</div>
-          <h2 style={{ ...S.sectionH2, textAlign: "center" }}>How InvenTrack works</h2>
-          <p style={{ ...S.sectionSub, margin: "0 auto", textAlign: "center" }}>
-            Eight clear steps take your team from login to actionable insights — every inventory event tracked and recorded.
+      {/* ── How It Works (Premium Winding Path) ── */}
+      <section style={{ ...S.section, background: "#fff", position: "relative", overflow: "hidden" }}>
+        <div style={{ textAlign: "center", marginBottom: "80px", position: "relative", zIndex: 10 }}>
+          <div style={{ ...S.sectionTag, display: "block", width: "fit-content", margin: "0 auto 18px", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe" }}>How It Works</div>
+          <h2 style={{ ...S.sectionH2, textAlign: "center", color: "#0f172a", fontSize: "3.2rem" }}>Integrated Logistics Flow</h2>
+          <p style={{ ...S.sectionSub, margin: "0 auto", textAlign: "center", fontSize: "1.2rem", maxWidth: "700px" }}>
+            The InvenTrack engine powers eight sequential logic gates, ensuring your supply chain remains fluid, secure, and data-driven.
           </p>
         </div>
-        <div style={{ background: "#f8faff", borderRadius: "24px", padding: "8px", border: "1px solid #e2e8f0" }}>
-          <div style={S.workflowGrid} className="it-workflow-grid">
-            {WORKFLOW.map((w, i) => (
-              <div 
-                key={i} 
-                style={{ 
-                  ...S.workflowStep, 
-                  position: "relative",
-                  transform: hoveredWorkflow === i ? "translateY(-8px) scale(1.02)" : "none",
-                  boxShadow: hoveredWorkflow === i ? "0 20px 40px rgba(59,130,246,0.12)" : S.workflowStep.boxShadow,
-                  borderColor: hoveredWorkflow === i ? "#bfdbfe" : S.workflowStep.borderColor,
-                }}
-                onMouseEnter={() => setHoveredWorkflow(i)}
-                onMouseLeave={() => setHoveredWorkflow(null)}
-              >
-                <div style={S.workflowNum}>{w.num}</div>
-                <div style={S.workflowIcon}>{w.icon}</div>
-                <div style={S.workflowTitle}>{w.title}</div>
-                <div style={S.workflowDesc}>{w.desc}</div>
-                {i < WORKFLOW.length - 1 && (i + 1) % 4 !== 0 && (
-                  <span style={S.workflowConnector} className="it-workflow-connector">›</span>
-                )}
-              </div>
-            ))}
+
+        <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
+          {/* SVG Connector Path */}
+          <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} viewBox="0 0 1200 600">
+            <defs>
+              <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#2563eb" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+              </linearGradient>
+            </defs>
+            {/* Winding Path: 1-4 R to L, then 5-8 L to R */}
+            <path 
+              d="M150,150 L450,150 L750,150 L1050,150 Q1150,150 1150,300 L1150,300 Q1150,450 1050,450 L750,450 L450,450 L150,450" 
+              fill="none" 
+              stroke="url(#flowGrad)" 
+              strokeWidth="3" 
+              strokeDasharray="12,12"
+              style={{ animation: "liquidFlow 10s linear infinite" }}
+            />
+          </svg>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "2px", position: "relative", zIndex: 2 }}>
+            {WORKFLOW.map((w, i) => {
+              // Logic for S-Curve: Row 1 (1-4), Row 2 (8-5)
+              const displayOrder = i < 4 ? i : (11 - i); 
+              const step = WORKFLOW[displayOrder];
+              
+              return (
+                <div 
+                  key={i} 
+                  style={{ 
+                    padding: "60px 40px",
+                    background: "#fff",
+                    border: "1px solid rgba(226, 232, 240, 0.8)",
+                    position: "relative",
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    transition: "all 0.3s ease",
+                    minHeight: "300px",
+                    cursor: "default"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.zIndex = 10;
+                    e.currentTarget.style.boxShadow = "0 20px 40px rgba(37,99,235,0.08)";
+                    e.currentTarget.style.borderColor = "#bfdbfe";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.zIndex = 2;
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.borderColor = "rgba(226, 232, 240, 0.8)";
+                  }}
+                >
+                  {/* Decorative 3D Background Icon */}
+                  <div style={{ position: "absolute", right: "-10px", bottom: "-10px", fontSize: "10rem", opacity: 0.05, transform: "rotate(-15deg)", pointerEvents: "none", zIndex: 0 }}>
+                    {step.icon}
+                  </div>
+
+                  <div style={{ 
+                    width: "56px", height: "56px", borderRadius: "50%", 
+                    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+                    color: "#fff", fontWeight: "950", fontSize: "1.2rem",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    marginBottom: "32px", position: "relative", zIndex: 1,
+                    boxShadow: "0 8px 20px rgba(37,99,235,0.3)"
+                  }}>
+                    {step.num}
+                  </div>
+
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: "900", color: "#0f172a", marginBottom: "12px", position: "relative", zIndex: 1 }}>
+                    {step.title}
+                  </h3>
+                  <p style={{ fontSize: "0.95rem", color: "#64748b", lineHeight: "1.6", fontWeight: "500", position: "relative", zIndex: 1 }}>
+                    {step.desc}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
