@@ -748,19 +748,34 @@ export default function Home() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900;1000&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-        @keyframes itFadeUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to   { opacity: 1; transform: translateY(0); }
+        @keyframes blobMove {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
         }
-        @keyframes floatA { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-        @keyframes floatB { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-        .it-fade-up { animation: itFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        .it-delay-1 { animation-delay: .12s; }
-        .it-delay-2 { animation-delay: .24s; }
-        .it-delay-3 { animation-delay: .36s; }
-        .it-float-a { animation: floatA 4s ease-in-out infinite; }
-        .it-float-b { animation: floatB 5s ease-in-out infinite; }
+        @keyframes liquidPulse {
+          0% { stroke-dashoffset: 1000; }
+          100% { stroke-dashoffset: 0; }
+        }
+        @keyframes orbitRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.2); }
+        }
+        .it-glass-card {
+          backdrop-filter: blur(16px);
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .it-glass-card:hover {
+          background: rgba(255, 255, 255, 0.85);
+          transform: perspective(1000px) rotateX(2deg) rotateY(2deg) translateY(-12px);
+          border-color: rgba(37, 99, 235, 0.4);
+        }
         @media (max-width: 900px) {
           .it-nav-links { display: none !important; }
           .it-hamburger { display: flex !important; }
@@ -1004,91 +1019,103 @@ export default function Home() {
           ))}
         </div>
       </section>
-      {/* ── How It Works (Premium Winding Path) ── */}
-      <section style={{ ...S.section, background: "#fff", position: "relative", overflow: "hidden" }}>
-        <div style={{ textAlign: "center", marginBottom: "80px", position: "relative", zIndex: 10 }}>
-          <div style={{ ...S.sectionTag, display: "block", width: "fit-content", margin: "0 auto 18px", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe" }}>How It Works</div>
-          <h2 style={{ ...S.sectionH2, textAlign: "center", color: "#0f172a", fontSize: "3.2rem" }}>Integrated Logistics Flow</h2>
-          <p style={{ ...S.sectionSub, margin: "0 auto", textAlign: "center", fontSize: "1.2rem", maxWidth: "700px" }}>
-            The InvenTrack engine powers eight sequential logic gates, ensuring your supply chain remains fluid, secure, and data-driven.
+      {/* ── How It Works (Aesthetic Wow Upgrade) ── */}
+      <section style={{ ...S.section, background: "#f8faff", position: "relative", overflow: "hidden", padding: "120px 0" }}>
+        
+        {/* Ambient Mesh Background Blobs */}
+        <div style={{ position: "absolute", top: "10%", left: "5%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(37,99,235,0.1), transparent 70%)", borderRadius: "50%", filter: "blur(60px)", animation: "blobMove 20s infinite alternate", zIndex: 0 }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "5%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(16,185,129,0.08), transparent 70%)", borderRadius: "50%", filter: "blur(80px)", animation: "blobMove 25s infinite alternate-reverse", zIndex: 0 }} />
+
+        <div style={{ textAlign: "center", marginBottom: "100px", position: "relative", zIndex: 10 }}>
+          <div style={{ ...S.sectionTag, display: "block", width: "fit-content", margin: "0 auto 20px", color: "#2563eb", background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.1)", backdropFilter: "blur(4px)" }}>The Method</div>
+          <h2 style={{ ...S.sectionH2, textAlign: "center", fontSize: "4rem", letterSpacing: "-0.04em" }}>System Intelligence flow</h2>
+          <p style={{ ...S.sectionSub, margin: "0 auto", textAlign: "center", fontSize: "1.3rem", maxWidth: "800px", opacity: 0.8 }}>
+            Experience the precision of the InvenTrack engine—a seamless orchestration of eight automated logic gates moving at the speed of thought.
           </p>
         </div>
 
-        <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
-          {/* SVG Connector Path */}
-          <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }} viewBox="0 0 1200 600">
+        <div style={{ maxWidth: "1300px", margin: "0 auto", position: "relative", padding: "0 40px" }}>
+          
+          {/* SVG Connector: Intelligent Pulse Tube */}
+          <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 1, pointerEvents: "none" }} viewBox="0 0 1200 600">
             <defs>
-              <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.2" />
-                <stop offset="50%" stopColor="#2563eb" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.05" />
+                <stop offset="50%" stopColor="#2563eb" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
               </linearGradient>
+              <filter id="pulseGlow">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
             </defs>
-            {/* Winding Path: 1-4 R to L, then 5-8 L to R */}
             <path 
-              d="M150,150 L450,150 L750,150 L1050,150 Q1150,150 1150,300 L1150,300 Q1150,450 1050,450 L750,450 L450,450 L150,450" 
-              fill="none" 
-              stroke="url(#flowGrad)" 
-              strokeWidth="3" 
-              strokeDasharray="12,12"
-              style={{ animation: "liquidFlow 10s linear infinite" }}
+              d="M150,150 L450,150 L750,150 L1050,150 Q1150,150 1150,300 Q1150,450 1050,450 L750,450 L450,450 L150,450" 
+              fill="none" stroke="url(#tubeGrad)" strokeWidth="6" strokeLinecap="round" 
+            />
+            <path 
+              d="M150,150 L450,150 L750,150 L1050,150 Q1150,150 1150,300 Q1150,450 1050,450 L750,450 L450,450 L150,450" 
+              fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray="100, 1000" strokeLinecap="round"
+              filter="url(#pulseGlow)"
+              style={{ animation: "liquidPulse 6s linear infinite" }}
             />
           </svg>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "2px", position: "relative", zIndex: 2 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0px", position: "relative", zIndex: 2 }}>
             {WORKFLOW.map((w, i) => {
-              // Logic for S-Curve: Row 1 (1-4), Row 2 (8-5)
               const displayOrder = i < 4 ? i : (11 - i); 
               const step = WORKFLOW[displayOrder];
               
               return (
                 <div 
                   key={i} 
+                  className="it-glass-card"
                   style={{ 
-                    padding: "60px 40px",
-                    background: "#fff",
-                    border: "1px solid rgba(226, 232, 240, 0.8)",
+                    padding: "70px 45px",
                     position: "relative",
                     overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     textAlign: "center",
-                    transition: "all 0.3s ease",
-                    minHeight: "300px",
-                    cursor: "default"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.zIndex = 10;
-                    e.currentTarget.style.boxShadow = "0 20px 40px rgba(37,99,235,0.08)";
-                    e.currentTarget.style.borderColor = "#bfdbfe";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.zIndex = 2;
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.borderColor = "rgba(226, 232, 240, 0.8)";
+                    minHeight: "360px",
+                    cursor: "default",
+                    margin: "1px" // Hairline spacing
                   }}
                 >
-                  {/* Decorative 3D Background Icon */}
-                  <div style={{ position: "absolute", right: "-10px", bottom: "-10px", fontSize: "10rem", opacity: 0.05, transform: "rotate(-15deg)", pointerEvents: "none", zIndex: 0 }}>
+                  {/* Glowing Pulse Aura behind number */}
+                  <div style={{ position: "absolute", top: "70px", width: "80px", height: "80px", background: "radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 70%)", borderRadius: "50%", animation: "glowPulse 4s infinite", zIndex: 0 }} />
+
+                  {/* 3D Background Icon with Float */}
+                  <div style={{ 
+                    position: "absolute", right: "-20px", bottom: "-20px", fontSize: "11rem", 
+                    opacity: 0.08, transform: "rotate(-10deg)", pointerEvents: "none", zIndex: 0,
+                    animation: `blobMove ${10 + i}s infinite alternate`
+                  }}>
                     {step.icon}
                   </div>
 
-                  <div style={{ 
-                    width: "56px", height: "56px", borderRadius: "50%", 
-                    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
-                    color: "#fff", fontWeight: "950", fontSize: "1.2rem",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    marginBottom: "32px", position: "relative", zIndex: 1,
-                    boxShadow: "0 8px 20px rgba(37,99,235,0.3)"
-                  }}>
-                    {step.num}
+                  <div style={{ position: "relative", marginBottom: "40px", zIndex: 1 }}>
+                    {/* Orbit Ring */}
+                    <div style={{ 
+                      position: "absolute", top: "-10px", left: "-10px", right: "-10px", bottom: "-10px",
+                      border: "2px dashed rgba(37, 99, 235, 0.3)", borderRadius: "50%", animation: "orbitRotate 8s linear infinite"
+                    }} />
+                    <div style={{ 
+                      width: "64px", height: "64px", borderRadius: "50%", 
+                      background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                      color: "#fff", fontWeight: "1000", fontSize: "1.4rem",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 10px 25px rgba(37,99,235,0.4)"
+                    }}>
+                      {step.num}
+                    </div>
                   </div>
 
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: "900", color: "#0f172a", marginBottom: "12px", position: "relative", zIndex: 1 }}>
+                  <h3 style={{ fontSize: "1.4rem", fontWeight: "900", color: "#0f172a", marginBottom: "16px", position: "relative", zIndex: 1, letterSpacing: "-0.02em" }}>
                     {step.title}
                   </h3>
-                  <p style={{ fontSize: "0.95rem", color: "#64748b", lineHeight: "1.6", fontWeight: "500", position: "relative", zIndex: 1 }}>
+                  <p style={{ fontSize: "1rem", color: "#64748b", lineHeight: "1.7", fontWeight: "500", position: "relative", zIndex: 1 }}>
                     {step.desc}
                   </p>
                 </div>
