@@ -1,186 +1,292 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
-// Assets imports
+import React, { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/logo.png";
-import managementImg from "../assets/management.png";
 
-/* ─── Inline Styles (Sapphire & Slate Design Restoration) ─── */
 const S = {
   root: {
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+    fontFamily: "'DM Sans', 'Inter', sans-serif",
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-    color: "#0f172a",
+    background: "#f8fafc", // Slate-50 background
+    color: "#0f172a", // Slate-900 text
     overflowX: "hidden",
   },
-  
-  /* ── Navigation Header ── */
-  header: {
-    padding: "20px 5%",
+  /* ── Navbar ── */
+  nav: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "rgba(255,255,255,0.7)",
-    backdropFilter: "blur(20px)",
-    borderBottom: "1.5px solid rgba(226, 232, 240, 0.4)",
-    position: "sticky",
-    top: 0,
-    zIndex: 1000,
+    padding: "0 5%",
+    height: "80px",
+    background: "rgba(255,255,255,0.75)",
+    backdropFilter: "blur(24px)",
+    borderBottom: "1px solid rgba(226, 232, 240, 0.4)",
+    transition: "all .4s ease",
   },
-  logoBox: { display: "flex", alignItems: "center", gap: "16px", cursor: "pointer" },
-  logoImg: { width: "64px", height: "64px", objectFit: "contain" },
-  logoName: { fontSize: "1.6rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" },
-  
-  btnPrimary: {
-    padding: "12px 28px", borderRadius: "16px",
-    background: "linear-gradient(135deg, #1d4ed8, #3b82f6)",
-    color: "#fff", fontWeight: "800", border: "none", cursor: "pointer",
-    boxShadow: "0 10px 30px rgba(37,99,235,0.3), inset 0 0 0 1px rgba(255,255,255,0.1)",
-    transition: "all .3s cubic-bezier(0.4, 0, 0.2, 1)"
-  },
-
-  /* ── Hero Section ── */
-  hero: {
-    padding: "100px 5%",
-    background: "linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%)",
-    color: "#fff",
-    textAlign: "center",
-    clipPath: "ellipse(100% 100% at 50% 0%)",
-    paddingBottom: "140px",
-  },
-  heroTitle: { fontSize: "3.5rem", fontWeight: "950", letterSpacing: "-2px", marginBottom: "20px" },
-  heroSub: { fontSize: "1.2rem", color: "rgba(255,255,255,0.7)", maxWidth: "800px", margin: "0 auto", lineHeight: 1.7 },
-
-  /* ── Marquee Ticker ── */
-  marqueeWrap: {
-    background: "#0f172a",
-    color: "#3b82f6",
-    padding: "12px 0",
-    borderTop: "1px solid rgba(59,130,246,0.2)",
-    borderBottom: "1px solid rgba(59,130,246,0.2)",
-    fontWeight: "800",
-    fontSize: "0.85rem",
-    letterSpacing: "1px",
-    textTransform: "uppercase",
-  },
-
-  /* ── Main Container ── */
-  container: { maxWidth: "1200px", margin: "-80px auto 0", padding: "0 5% 120px", position: "relative", zIndex: 10 },
-  
-  /* ── Info Cards ── */
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "32px" },
-  card: {
-    background: "rgba(255, 255, 255, 0.8)",
-    backdropFilter: "blur(12px)",
-    padding: "48px",
-    borderRadius: "32px",
-    border: "1.5px solid rgba(226, 232, 240, 0.8)",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
-    transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+  navLogo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    textDecoration: "none",
     cursor: "pointer",
   },
-  cardTitle: { fontSize: "1.6rem", fontWeight: "950", marginBottom: "16px", color: "#1e3a8a", letterSpacing: "-0.5px" },
-  cardText: { fontSize: "1.05rem", color: "#64748b", lineHeight: 1.8, fontWeight: "500" },
-
-  /* ── Workflow Steps ── */
-  workflowRow: {
-    display: "flex", alignItems: "center", gap: "0", overflowX: "auto", padding: "40px 0", scrollbarWidth: "none"
+  navLogoImg: {
+    width: "48px",
+    height: "48px",
+    objectFit: "contain",
   },
-  wfStep: {
-    minWidth: "180px", flex: 1, padding: "32px 24px", background: "#fff", borderRadius: "24px", 
-    border: "1.5px solid #e2e8f0", textAlign: "center", position: "relative",
-    transition: "all .3s ease",
-    boxShadow: "0 4px 6px rgba(0,0,0,0.02)"
+  navBrand: {
+    fontSize: "1.75rem",
+    fontWeight: "1000",
+    color: "#1e3a8a",
+    letterSpacing: "-1.5px",
   },
-  wfArrow: {
-    fontSize: "1.5rem", color: "#cbd5e1", margin: "0 16px", fontWeight: "900",
-    display: "flex", alignItems: "center", justifyContent: "center"
+  navLinks: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    listStyle: "none",
   },
-  wfNum: { fontSize: "2.4rem", fontWeight: "950", color: "#2563eb", opacity: 0.1, marginBottom: "8px" },
-
-  footer: {
-    padding: "80px 5%", background: "#fff", borderTop: "1.5px solid #e2e8f0", textAlign: "center"
-  }
+  navLink: {
+    padding: "8px 16px",
+    borderRadius: "10px",
+    color: "#475569",
+    fontWeight: "600",
+    fontSize: "0.95rem",
+    textDecoration: "none",
+    transition: "all .3s",
+  },
+  navLinkActive: {
+    color: "#2563eb",
+    background: "rgba(37, 99, 235, 0.08)",
+  },
+  navBtn: {
+    padding: "10px 24px",
+    borderRadius: "12px",
+    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: "0.95rem",
+    border: "none",
+    cursor: "pointer",
+    boxShadow: "0 8px 20px rgba(37, 99, 235, 0.2)",
+    transition: "all .3s",
+  },
+  /* ── Hero ── */
+  hero: {
+    padding: "160px 6% 100px",
+    textAlign: "center",
+    background: "radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent), radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.03), transparent)",
+  },
+  heroH1: {
+    fontSize: "clamp(3rem, 6vw, 5.5rem)",
+    fontWeight: "1000",
+    letterSpacing: "-4px",
+    lineHeight: "0.95",
+    color: "#0f172a",
+    marginBottom: "32px",
+  },
+  heroSubtitle: {
+    fontSize: "1.25rem",
+    color: "#64748b",
+    maxWidth: "800px",
+    margin: "0 auto",
+    lineHeight: "1.6",
+    letterSpacing: "-0.2px",
+  },
+  /* ── Bento Grid ── */
+  bentoContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gridAutoRows: "minmax(300px, auto)",
+    gap: "24px",
+    padding: "0 6% 120px",
+  },
+  glassCard: {
+    background: "rgba(255, 255, 255, 0.7)",
+    backdropFilter: "blur(16px)",
+    border: "1px solid rgba(255, 255, 255, 0.4)",
+    borderRadius: "32px",
+    padding: "48px",
+    boxShadow: "0 20px 50px rgba(0,0,0,0.03)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+    cursor: "default",
+    position: "relative",
+    overflow: "hidden",
+  },
+  /* ── Specific Bento Items ── */
+  itemMission: {
+    gridColumn: "1 / span 2",
+    gridRow: "1 / span 2",
+    backgroundImage: "linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.6)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1200')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    color: "#fff",
+    border: "none",
+  },
+  itemVision: {
+    gridColumn: "3 / span 1",
+    gridRow: "1 / span 1",
+    background: "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7))",
+  },
+  itemVisionVisual: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: "100%",
+    height: "50%",
+    backgroundImage: "url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    opacity: 0.8,
+    maskImage: "linear-gradient(to top, black, transparent)",
+  },
+  itemFeature1: { gridColumn: "3 / span 1", gridRow: "2 / span 1" },
+  itemFeature2: { gridColumn: "1 / span 1", gridRow: "3 / span 1" },
+  itemFeature3: { gridColumn: "2 / span 1", gridRow: "3 / span 1" },
+  itemFeature4: { gridColumn: "3 / span 1", gridRow: "3 / span 1" },
+  /* ── Roles Section ── */
+  roleContainer: {
+    padding: "120px 6%",
+    background: "#fff",
+  },
+  roleGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+    gap: "32px",
+    marginTop: "60px",
+  },
+  roleCard: {
+    padding: "48px",
+    borderRadius: "32px",
+    background: "#fff",
+    border: "1.5px solid #e2e8f0",
+    transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+    position: "relative",
+  },
+  adminCard: {
+    borderColor: "#2563eb",
+    boxShadow: "0 0 40px rgba(37, 99, 235, 0.15)",
+  },
+  roleIconContainer: {
+    width: "72px",
+    height: "72px",
+    borderRadius: "20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "2.5rem",
+    marginBottom: "32px",
+    background: "rgba(37, 99, 235, 0.05)",
+  },
+  /* ── System Intel ── */
+  intelSection: {
+    padding: "100px 6%",
+    background: "#0f172a", // Slate-900
+    color: "#fff",
+    textAlign: "center",
+  },
+  intelGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "40px",
+    maxWidth: "1200px",
+    margin: "0 auto",
+  },
+  intelVal: {
+    fontSize: "clamp(2.5rem, 4vw, 4.5rem)",
+    fontWeight: "1000",
+    letterSpacing: "-2px",
+    margin: "0 0 8px 0",
+    fontFamily: "'Inter', sans-serif",
+  },
+  intelLabel: {
+    fontSize: "1rem",
+    fontWeight: "800",
+    color: "#64748b", // Slate-400
+    textTransform: "uppercase",
+    letterSpacing: "4px",
+  },
 };
 
-function AboutUs() {
+const ROLES_DATA = [
+  {
+    title: "System Admin",
+    type: "System Control",
+    icon: "🛡️",
+    isAdmin: true,
+    desc: "Manages user roles and system configuration.",
+    perms: ["Manage Users & Roles", "System Settings", "Data Management"]
+  },
+  {
+    title: "Logistics Manager",
+    type: "Operational Lead",
+    icon: "💼",
+    desc: "Overseeing the supply chain and optimizing warehouse resource allocation.",
+    perms: ["Inventory Analysis", "Supplier Coordination", "Stock Threshold Control"]
+  },
+  {
+    title: "Warehouse Staff",
+    type: "Operational Access",
+    icon: "📦",
+    desc: "Handles day-to-day inventory tasks and updates stock information.",
+    perms: ["View Product Details", "Update Stock Levels", "Search & Filter Products", "Limited Access"]
+  }
+];
+
+export default function AboutUs() {
   const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0,0);
-    /* Inject Fonts & Animations */
-    if (!document.getElementById("it-fonts")) {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!document.getElementById("premium-styles")) {
       const style = document.createElement("style");
-      style.id = "it-fonts";
+      style.id = "premium-styles";
       style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
-        @keyframes itFadeUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes glowPulse {
-          0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-          70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-        }
-        .it-fade-up { animation: itFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .it-delay-1 { animation-delay: 0.1s; }
-        .it-delay-2 { animation-delay: 0.2s; }
-        .it-glow-on-hover:hover {
-          animation: glowPulse 2s infinite;
-        }
-        @keyframes float {
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@700;800;900;1000&family=Inter:wght@900&display=swap');
+        
+        @keyframes floating {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-20px); }
         }
-        @keyframes liquidFlow {
-          from { stroke-dashoffset: 100; }
-          to { stroke-dashoffset: 0; }
+
+        @keyframes orbitRotate {
+          from { transform: rotate(0deg) translateX(5px) rotate(0deg); }
+          to { transform: rotate(360deg) translateX(5px) rotate(-360deg); }
         }
+
         @keyframes neonPulse {
-          0%, 100% { border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
-          50% { border-color: rgba(59, 130, 246, 1); box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
+          0%, 100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.2), inset 0 0 10px rgba(37, 99, 235, 0.1); border-color: #2563eb; }
+          50% { box-shadow: 0 0 50px rgba(37, 99, 235, 0.5), inset 0 0 20px rgba(37, 99, 235, 0.2); border-color: #3b82f6; }
         }
-        @keyframes bgFlow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+
+        @keyframes glowPulse {
+          0%, 100% { filter: drop-shadow(0 0 5px rgba(37, 99, 235, 0.5)); }
+          50% { filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.9)); }
         }
-        .saas-wf-card {
-          background: rgba(255, 255, 255, 0.6) !important;
-          backdrop-filter: blur(25px) !important;
-          border: 1px solid rgba(255, 255, 255, 0.8) !important;
-          border-radius: 28px !important;
-          padding: 30px 20px !important;
-          transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-          animation: float 4s ease-in-out infinite;
-          animation-delay: var(--delay);
-          z-index: 2;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.03) !important;
-        }
-        .saas-wf-card:hover {
-          background: rgba(255, 255, 255, 0.9) !important;
-          transform: translateY(-15px) scale(1.05) !important;
-          border-color: #3b82f6 !important;
-          box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.2) !important;
-        }
-        .saas-wf-line {
-          stroke: url(#liquidGrad);
-          stroke-width: 3;
-          stroke-dasharray: 10, 15;
-          animation: liquidFlow 5s linear infinite;
-        }
-        .saas-3d-icon {
-          font-size: 3rem;
-          margin-bottom: 20px;
-          filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-          display: inline-block;
-          transition: transform 0.3s;
-        }
-        .saas-wf-card:hover .saas-3d-icon {
-          transform: scale(1.2) rotate(5deg);
-        }
+
+        .floating-section { animation: floating 8s ease-in-out infinite; }
+        .bento-hover:hover { transform: scale(1.03); z-index: 10; box-shadow: 0 30px 70px rgba(0,0,0,0.1); }
+        .orbit-icon { animation: orbitRotate 6s linear infinite; }
+        .neon-admin { animation: neonPulse 3s ease-in-out infinite; }
+        .glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+        
+        .tracking-black { letter-spacing: -2px; }
       `;
       document.head.appendChild(style);
     }
@@ -188,194 +294,136 @@ function AboutUs() {
 
   return (
     <div style={S.root}>
-      {/* ── Navigation ── */}
-      <header style={S.header}>
-        <div style={S.logoBox} onClick={() => navigate("/")}>
-          <img src={logo} alt="IT" style={S.logoImg} />
-          <span style={S.logoName}>InvenTrack</span>
+      {/* Navbar */}
+      <nav style={{ ...S.nav, background: scrolled ? "rgba(255,255,255,0.9)" : S.nav.background }}>
+        <div style={S.navLogo} onClick={() => navigate("/")}>
+          <img src={logo} alt="InvenTrack" style={S.navLogoImg} />
+          <span style={S.navBrand}>InvenTrack</span>
         </div>
-        <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
-          <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#2563eb", cursor: "pointer", textTransform: "uppercase", borderBottom: "2px solid #2563eb" }}>About Us</span>
-          <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b", cursor: "pointer", textTransform: "uppercase" }} onClick={() => navigate("/contact")}>Contact</span>
-          <button style={S.btnPrimary} onClick={() => navigate("/login")}>Get Started</button>
+        <div style={S.navLinks}>
+          <Link to="/" style={S.navLink}>Home</Link>
+          <Link to="/about" style={{ ...S.navLink, ...S.navLinkActive }}>About</Link>
+          <button style={S.navBtn} onClick={() => navigate("/login")}>System Login</button>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <header style={S.hero}>
+        <div className="floating-section">
+          <h1 style={S.heroH1}>The Next Generation <br /> of <span style={{ color: "#2563eb" }}>Inventory Control</span></h1>
+          <p style={S.heroSubtitle}>
+            A comprehensive, real-time inventory management solution designed to streamline warehouse operations and ensure stock accuracy across your entire organization.
+          </p>
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section style={S.hero}>
-        <h1 style={S.heroTitle} className="it-fade-up">Smart Inventory Management</h1>
-        <p style={S.heroSub} className="it-fade-up it-delay-1">
-          InvenTrack is a web-based comprehensive solution designed to eliminate manual tracking 
-          errors and provide complete stock visibility for modern manufacturing.
-        </p>
+      {/* Bento Grid */}
+      <section style={S.bentoContainer}>
+        {/* Mission */}
+        <div style={{ ...S.glassCard, ...S.itemMission }} className="bento-hover">
+          <div>
+            <span style={{ textTransform: "uppercase", fontSize: "0.85rem", fontWeight: "900", letterSpacing: "2px", color: "rgba(255,255,255,0.6)" }}>Our Mission</span>
+            <h2 style={{ fontSize: "3rem", fontWeight: "1000", marginTop: "16px", letterSpacing: "-1.5px" }}>Bridging the <br /> Logistic Void</h2>
+          </div>
+          <p style={{ fontSize: "1.1rem", opacity: 0.9, maxWidth: "500px", lineHeight: "1.6" }}>
+            We empower businesses with precise stock visibility. InvenTrack eliminates manual errors and provides a centralized platform for tracking every product movement within your warehouse.
+          </p>
+        </div>
+
+        {/* Vision */}
+        <div style={{ ...S.glassCard, ...S.itemVision }} className="bento-hover">
+          <div style={S.itemVisionVisual}></div>
+          <div style={{ position: "relative" }}>
+            <span style={{ textTransform: "uppercase", fontSize: "0.75rem", fontWeight: "900", letterSpacing: "2px", color: "#64748b" }}>Technology</span>
+            <h3 style={{ fontSize: "1.75rem", fontWeight: "1000", marginTop: "8px", letterSpacing: "-1px" }}>Data-Powered <br /> Logistics</h3>
+          </div>
+        </div>
+
+        {/* Features Bento */}
+        <div style={{ ...S.glassCard, ...S.itemFeature1 }} className="bento-hover">
+          <span style={{ fontSize: "3rem" }}>📊</span>
+          <h4 style={{ fontSize: "1.5rem", fontWeight: "1000" }}>Real-Time Inventory Tracking</h4>
+          <p style={{ color: "#64748b", fontSize: "0.9rem", marginTop: "12px" }}>Track product stock levels instantly with live updates across the system, ensuring accurate inventory visibility at all times.</p>
+        </div>
+
+        <div style={{ ...S.glassCard, ...S.itemFeature2 }} className="bento-hover">
+          <span style={{ fontSize: "3rem" }}>📦</span>
+          <h4 style={{ fontSize: "1.5rem", fontWeight: "1000" }}>Smart Stock Management</h4>
+          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>Easily add, update, and manage products while receiving low stock alerts to prevent shortages and overstocking.</p>
+        </div>
+
+        <div style={{ ...S.glassCard, ...S.itemFeature3 }} className="bento-hover">
+          <span style={{ fontSize: "3rem" }}>🔐</span>
+          <h4 style={{ fontSize: "1.5rem", fontWeight: "1000" }}>Role-Based Access Control</h4>
+          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>Secure access with defined roles where managers control operations and staff handle day-to-day inventory tasks efficiently.</p>
+        </div>
+
+        <div style={{ ...S.glassCard, ...S.itemFeature4, background: "#2563eb", color: "#fff" }} className="bento-hover">
+          <h4 style={{ fontSize: "1.5rem", fontWeight: "1000" }}>99.9% <br /> Reliability</h4>
+          <span style={{ fontSize: "2rem" }}>💎</span>
+        </div>
       </section>
 
-      {/* ── Live Pulse Marquee ── */}
-      <div style={S.marqueeWrap}>
-        <marquee scrollamount="8" behavior="scroll" direction="left">
-           🔐 [SECURITY] Role-Based Access Active &nbsp;&nbsp;&nbsp;&nbsp; 🚀 [STATUS] Stock Vault Synchronized &nbsp;&nbsp;&nbsp;&nbsp; 📊 [DATA] Real-time Reporting Online &nbsp;&nbsp;&nbsp;&nbsp; 💎 [INFO] Admin Authored 2m Ago &nbsp;&nbsp;&nbsp;&nbsp; 📦 [INVENTORY] Low Stock Indicator Functional
-        </marquee>
-      </div>
-
-      <main style={S.container}>
-        
-        {/* ── Mission & Vision ── */}
-        <div style={{ ...S.grid, marginBottom: "80px" }} className="it-fade-up it-delay-2">
-          <div style={S.card} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-10px)"; e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.boxShadow="0 20px 40px rgba(0,0,0,0.08)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.boxShadow=S.card.boxShadow; }}>
-            <h2 style={{ ...S.cardTitle, fontWeight: "950", letterSpacing: "-1px" }}>Our Mission</h2>
-            <p style={S.cardText}>
-              To provide industrial-strength transparency for every asset in your warehouse. 
-              We aim to replace unreliable manual logs with a high-fidelity digital nervous 
-              system that scales with your growth.
-            </p>
-          </div>
-          <div style={{ ...S.card, background: "#1e3a8a", color: "#fff", border: "none" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-10px)"; e.currentTarget.style.boxShadow="0 20px 40px rgba(30,58,138,0.2)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow=S.card.boxShadow; }}>
-            <h2 style={{ ...S.cardTitle, color: "#fff", fontWeight: "950", letterSpacing: "-1px" }}>Our Vision</h2>
-            <p style={{ ...S.cardText, color: "rgba(255,255,255,0.7)" }}>
-              We envision a future where inventory systems are smarter and fully automated, 
-              allowing businesses to operate at peak velocity with zero-error predictive 
-              intelligence.
-            </p>
-          </div>
+      {/* Roles Section */}
+      <section style={S.roleContainer}>
+        <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
+          <span style={{ textTransform: "uppercase", fontSize: "0.85rem", fontWeight: "900", letterSpacing: "2px", color: "#2563eb" }}>User Infrastructure</span>
+          <h2 style={{ fontSize: "3.5rem", fontWeight: "1000", marginTop: "16px", letterSpacing: "-2px" }}>Administrative Structure</h2>
         </div>
 
-        {/* ── Features ── */}
-        <div style={{ textAlign: "center", marginBottom: "60px" }} className="it-fade-up">
-          <h2 style={{ fontSize: "2.8rem", fontWeight: "950", color: "#0f172a", letterSpacing: "-1.5px" }}>Core Ecosystem Capabilities</h2>
-        </div>
-        <div style={{ ...S.grid, marginBottom: "120px" }}>
-          {[
-            { t: "Product Management", d: "Easily add, edit, or delete items with categorical precision.", i: "📦", c: "#2563eb" },
-            { t: "Stock Tracking", d: "Monitor inventory levels in real-time across multiple zones.", i: "📊", c: "#10b981" },
-            { t: "Smart Alerts", d: "Instant visual cues when stock hits critical thresholds.", i: "🔔", c: "#ef4444" },
-            { t: "Role Hierarchy", d: "Secure permissions for Admin, Manager, and Staff roles.", i: "🛡️", c: "#6366f1" },
-            { t: "Search & Filter", d: "Locate any asset in milliseconds with advanced query tools.", i: "🔍", c: "#0ea5e9" },
-            { t: "Data Reports", d: "Generate operational summaries and valuation insights.", i: "📈", c: "#f59e0b" }
-          ].map((f, i) => (
-            <div key={i} style={{ ...S.card, padding: "32px", border: "1.5px solid #e2e8f0" }} className="it-glow-on-hover" onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-10px) scale(1.02)"; e.currentTarget.style.borderColor = f.c; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "16px", filter: "drop-shadow(0 5px 15px rgba(0,0,0,0.1))" }}>{f.i}</div>
-              <h3 style={{ fontSize: "1.3rem", fontWeight: "950", marginBottom: "8px", color: "#0f172a" }}>{f.t}</h3>
-              <p style={{ fontSize: "0.95rem", color: "#64748b", lineHeight: 1.6, fontWeight: "600" }}>{f.d}</p>
+        <div style={S.roleGrid}>
+          {ROLES_DATA.map((role, i) => (
+            <div
+              key={i}
+              style={{ ...S.roleCard, ...(role.isAdmin ? S.adminCard : {}) }}
+              className={`bento-hover ${role.isAdmin ? 'neon-admin' : ''}`}
+            >
+              <div style={S.roleIconContainer}>
+                <span className={`orbit-icon ${role.isAdmin ? 'glow-pulse' : ''}`}>{role.icon}</span>
+              </div>
+              <span style={{ color: "#2563eb", fontWeight: "800", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "1px" }}>{role.type}</span>
+              <h3 style={{ fontSize: "1.75rem", fontWeight: "1000", marginTop: "12px", marginBottom: "16px", letterSpacing: "-1px" }}>{role.title}</h3>
+              <p style={{ color: "#64748b", fontSize: "1rem", lineHeight: "1.6", marginBottom: "24px" }}>{role.desc}</p>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
+                {role.perms.map((p, idx) => (
+                  <li key={idx} style={{ fontSize: "0.9rem", color: "#475569", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ color: "#2563eb", fontWeight: "900" }}>✓</span> {p}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
+      </section>
 
-        {/* ── High-End SaaS Workflow Section (Light Theme Integration) ── */}
-        <section style={{ 
-          margin: "0 0 120px", 
-          position: "relative",
-          zIndex: 1
-        }}>
-          {/* Subtle Aura Gradients for integration */}
-          <div style={{ position: "absolute", top: "0%", left: "10%", width: "40%", height: "100%", background: "radial-gradient(circle, rgba(37,99,235,0.06) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(60px)", zIndex: 0 }} />
-          <div style={{ position: "absolute", top: "0%", right: "10%", width: "40%", height: "100%", background: "radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(60px)", zIndex: 0 }} />
-
-          <div style={{ textAlign: "center", marginBottom: "80px", position: "relative", zIndex: 5 }}>
-            <h2 style={{ fontSize: "3.5rem", fontWeight: "950", color: "#0f172a", letterSpacing: "-2.5px" }}>System Flow</h2>
-            <p style={{ color: "#475569", fontSize: "1.2rem", maxWidth: "700px", margin: "20px auto 0", fontWeight: "600", opacity: 0.9 }}>Experience the fluid intelligence of InvenTrack logistics.</p>
+      {/* System Intel Section */}
+      <div style={S.intelSection}>
+        <div style={S.intelGrid}>
+          <div>
+            <h3 style={S.intelVal} className="tracking-black">12.5k</h3>
+            <span style={S.intelLabel}>Items Tracked</span>
           </div>
-
-          <div style={{ position: "relative", paddingBottom: "40px" }}>
-            {/* SVG Connector Layer */}
-            <svg style={{ position: "absolute", top: "50%", left: 0, width: "100%", height: "200px", zIndex: 1, pointerEvents: "none" }} viewBox="0 0 1000 200">
-              <defs>
-                <linearGradient id="liquidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-                  <stop offset="50%" stopColor="#3b82f6" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d="M100,100 C200,100 200,50 300,50 S400,150 500,150 S600,50 700,50 S800,100 900,100" fill="none" className="saas-wf-line" />
-            </svg>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2, gap: "24px" }}>
-              {[
-                { t: "Master Auth", d: "Secure gateway with role-based biometrics.", i: "🔑", delay: "0s", neon: "#22d3ee" },
-                { t: "Asset Vault", d: "High-fidelity digital asset repository.", i: "🛡️", delay: "0.2s", neon: "#3b82f6" },
-                { t: "Live Pulse", d: "Real-time logistics monitoring engine.", i: "📡", delay: "0.4s", neon: "#f43f5e" },
-                { t: "Data Sync", d: "Elastic synchronization across nodes.", i: "🔄", delay: "0.6s", neon: "#10b981" },
-                { t: "Intelligence", d: "Predictive analytics & report generation.", i: "📈", delay: "0.8s", neon: "#d946ef" },
-              ].map((step, i) => (
-                <div key={i} className="saas-wf-card" style={{ "--delay": step.delay, width: "18%", padding: "40px 24px" }}>
-                  <div className="saas-3d-icon" style={{ filter: `drop-shadow(0 0 15px ${step.neon}66)` }}>{step.i}</div>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: "950", color: "#1e3a8a", marginBottom: "12px", letterSpacing: "-0.5px" }}>{step.t}</h3>
-                  <p style={{ fontSize: "0.9rem", color: "#475569", lineHeight: 1.6, fontWeight: "700", opacity: 0.85 }}>{step.d}</p>
-                  <div style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}>
-                    <div style={{ width: "40px", height: "4px", background: step.neon, borderRadius: "2px", boxShadow: `0 0 10px ${step.neon}aa` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div>
+            <h3 style={S.intelVal} className="tracking-black">99.9%</h3>
+            <span style={S.intelLabel}>System Uptime</span>
           </div>
-        </section>
-
-        {/* ── Detailed System Roles ── */}
-        <div style={{ marginBottom: "120px" }}>
-          <div style={{ textAlign: "center", marginBottom: "60px" }}>
-            <h2 style={{ fontSize: "2.5rem", fontWeight: "900", color: "#0f172a" }}>System Access Roles</h2>
-            <p style={{ color: "#64748b", fontSize: "1.1rem", maxWidth: "800px", margin: "16px auto 0", lineHeight: 1.6 }}>A structured, role-based architecture ensuring secure and efficient operations at every level.</p>
-          </div>
-          <div style={{ ...S.grid, gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-            {[
-              { 
-                r: "Admin", 
-                i: "🛡️", 
-                bg: "#1e3a8a", 
-                tc: "#fff",
-                desc: "The System Owner with supreme control over the platform's configuration and security.",
-                points: ["Manage all user accounts", "Assign system roles", "Configure global settings", "Full data visibility"] 
-              },
-              { 
-                r: "Manager", 
-                i: "💼", 
-                bg: "#fff", 
-                tc: "#0f172a",
-                border: "1.5px solid #e2e8f0",
-                desc: "The Operational Head responsible for catalog accuracy and inventory insights.",
-                points: ["Add, edit, or delete products", "Monitor low stock alerts", "Manage supplier relations", "View operational reports"] 
-              },
-              { 
-                r: "Staff", 
-                i: "👤", 
-                bg: "#fff", 
-                tc: "#0f172a",
-                border: "1.5px solid #e2e8f0",
-                desc: "The Day-to-Day Worker keeping the warehouse operations moving rapidly.",
-                points: ["View product catalog", "Update current stock levels", "Process daily transactions", "Check low stock status"] 
-              }
-            ].map((role, i) => (
-              <div key={i} style={{ 
-                background: role.bg, color: role.tc, border: role.border || "none",
-                padding: "48px 40px", borderRadius: "32px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
-                transition: "transform .3s ease",
-              }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; }}>
-                <div style={{ fontSize: "3rem", marginBottom: "24px" }}>{role.i}</div>
-                <h3 style={{ fontSize: "1.8rem", fontWeight: "900", marginBottom: "16px", color: role.tc }}>{role.r}</h3>
-                <p style={{ fontSize: "1rem", opacity: 0.85, lineHeight: 1.6, marginBottom: "32px" }}>{role.desc}</p>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {role.points.map((pt, idx) => (
-                    <li key={idx} style={{ 
-                      fontSize: "0.95rem", fontWeight: "700", marginBottom: "16px",
-                      display: "flex", alignItems: "flex-start", gap: "12px", opacity: 0.95
-                    }}>
-                      <span style={{ color: role.bg === "#1e3a8a" ? "#60a5fa" : "#2563eb", marginTop: "2px" }}>✔</span> {pt}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          <div>
+            <h3 style={S.intelVal} className="tracking-black">3 Roles</h3>
+            <span style={S.intelLabel}>Integrated</span>
           </div>
         </div>
+      </div>
 
-      </main>
-
-      <footer style={S.footer}>
-        <p style={{ color: "#94a3b8", fontWeight: "800", fontSize: "0.9rem" }}>
-          © 2026 InvenTrack Infrastructure. Simple. Reliable. Accurate.
-        </p>
+      {/* Footer */}
+      <footer style={{ padding: "60px 6% 40px", background: "#0f172a", color: "#94a3b8", textAlign: "center" }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "40px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "20px" }}>
+            <img src={logo} alt="Logo" style={{ width: "32px", opacity: 0.8 }} />
+            <span style={{ color: "#fff", fontWeight: "900", fontSize: "1.25rem", letterSpacing: "-0.5px" }}>InvenTrack</span>
+          </div>
+          <p style={{ fontSize: "0.85rem", fontWeight: "600" }}>© 2026 InvenTrack Enterprise Solutions. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
 }
-
-export default AboutUs;

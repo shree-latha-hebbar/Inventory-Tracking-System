@@ -67,6 +67,7 @@ const S = {
     gap: "6px",
     listStyle: "none",
     margin: 0,
+    marginLeft: "auto",
     padding: 0,
   },
   navLink: {
@@ -776,6 +777,24 @@ export default function Home() {
           transform: perspective(1000px) rotateX(2deg) rotateY(2deg) translateY(-12px);
           border-color: rgba(37, 99, 235, 0.4);
         }
+        @keyframes cardFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
+        }
+        .it-feature-glass {
+          backdrop-filter: blur(20px);
+          background: rgba(255, 255, 255, 0.45);
+          border: 1.5px solid rgba(37, 99, 235, 0.12);
+          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: cardFloat 6s ease-in-out infinite;
+        }
+        .it-feature-glass:hover {
+          background: rgba(255, 255, 255, 0.7);
+          border-color: rgba(37, 99, 235, 0.4);
+          transform: translateY(-20px) scale(1.02) perspective(1000px) rotateX(2deg);
+          box-shadow: 0 30px 60px rgba(37, 99, 235, 0.1);
+          animation-play-state: paused;
+        }
         @media (max-width: 900px) {
           .it-nav-links { display: none !important; }
           .it-hamburger { display: flex !important; }
@@ -788,6 +807,7 @@ export default function Home() {
         }
         @media (max-width: 600px) {
           .it-workflow-grid { grid-template-columns: 1fr !important; }
+          .it-feature-grid { grid-template-columns: 1fr !important; }
         }
       `;
       document.head.appendChild(style);
@@ -990,31 +1010,63 @@ export default function Home() {
             <img src={featuresImg} alt="System Requirements" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         </div>
-        <div style={S.grid3}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", marginBottom: "60px" }} className="it-feature-grid">
           {FEATURES.map((f, i) => (
             <div
               key={i}
+              className="it-feature-glass"
               style={{
-                ...S.featureCard,
-                transform: hoveredFeature === i ? "translateY(-6px)" : "",
-                boxShadow: hoveredFeature === i ? "0 16px 40px rgba(59,130,246,0.14)" : "0 2px 12px rgba(0,0,0,0.05)",
-                borderColor: hoveredFeature === i ? "#bfdbfe" : "#e2e8f0",
+                borderRadius: "32px",
+                padding: "48px 32px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                position: "relative",
+                overflow: "hidden",
+                animationDelay: `${i * 0.4}s`
               }}
-              onMouseEnter={() => setHoveredFeature(i)}
-              onMouseLeave={() => setHoveredFeature(null)}
             >
-              <div style={{ ...S.featureIconWrap, background: f.color }}>
-                {f.icon}
+              {/* 3D-Gradient Feature Icon Cluster */}
+              <div style={{ 
+                width: "110px", height: "110px", marginBottom: "32px", 
+                position: "relative", display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <svg viewBox="0 0 100 100" style={{ width: "100%", height: "100%", filter: "drop-shadow(0 15px 15px rgba(37,99,235,0.15))" }}>
+                  <defs>
+                    <linearGradient id={`feat-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1e3a8a" />
+                    </linearGradient>
+                    <radialGradient id={`feat-glow-${i}`} cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#2563eb" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+                  <circle cx="50%" cy="50%" r="48" fill={`url(#feat-glow-${i})`} />
+                  {/* High-quality 3D Abstract Icons */}
+                  {i === 0 && <path d="M20,30 L80,30 L80,70 L20,70 Z M30,40 L70,40 L70,60 L30,60 Z" fill={`url(#feat-grad-${i})`} />}
+                  {i === 1 && <path d="M50,15 L85,35 L85,75 L50,95 L15,75 L15,35 Z" fill={`url(#feat-grad-${i})`} />}
+                  {i === 2 && <circle cx="50" cy="50" r="35" stroke={`url(#feat-grad-${i})`} strokeWidth="8" fill="none" strokeDasharray="160 60" />}
+                  {i === 3 && <rect x="25" y="25" width="50" height="50" rx="10" transform="rotate(45 50 50)" fill={`url(#feat-grad-${i})`} />}
+                  {i === 4 && <path d="M50,15 L85,35 L85,75 L50,95 L15,75 L15,35 Z" fill={`url(#feat-grad-${i})`} opacity="0.6" />}
+                  {i === 5 && <rect x="30" y="30" width="40" height="40" rx="4" fill={`url(#feat-grad-${i})`} />}
+                </svg>
+                <div style={{ position: "absolute", fontSize: "3rem", filter: "drop-shadow(0 10px 10px rgba(0,0,0,0.1))" }}>{f.icon}</div>
               </div>
-              <h3 style={S.featureH3}>{f.title}</h3>
-              <p style={S.featureP}>{f.desc}</p>
-              {hoveredFeature === i && (
-                <div style={{
-                  position: "absolute", top: 0, left: 0, right: 0,
-                  height: "3px", borderRadius: "18px 18px 0 0",
-                  background: `linear-gradient(90deg, ${f.iconColor}, transparent)`,
-                }} />
-              )}
+
+              <h3 style={{ fontSize: "1.5rem", fontWeight: "1000", color: "#0f172a", marginBottom: "16px", letterSpacing: "-0.04em" }}>
+                {f.title}
+              </h3>
+              <p style={{ color: "#64748b", lineHeight: "1.7", fontSize: "1.02rem", fontWeight: "500", maxWidth: "260px" }}>
+                {f.desc}
+              </p>
+              
+              {/* Accented Glass Base */}
+              <div style={{ 
+                position: "absolute", bottom: 0, left: 0, right: 0, 
+                height: "6px", background: "linear-gradient(90deg, transparent, rgba(37,99,235,0.4), transparent)"
+              }} />
             </div>
           ))}
         </div>
