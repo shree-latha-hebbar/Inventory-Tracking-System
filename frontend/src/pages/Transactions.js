@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import logo from "../assets/logo.png";
 
 /* ─── Inline Styles (Sapphire & Slate Design System) ─────── */
@@ -102,21 +103,21 @@ function Transactions() {
   const location = useLocation();
   const role = (localStorage.getItem("role") || "").trim().toLowerCase();
   const isManager = role === "manager";
-  
-  // 📦 Load from Storage or Fallback
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem("inventrack_transactions");
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
-  });
+  const [transactions, setTransactions] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [newTxn, setNewTxn] = useState({
-    product: OFFICIAL_PRODUCTS[0],
+    product_id: "",
     type: "IN",
-    quantity: 1
+    quantity: 1,
+    notes: ""
   });
   
   useEffect(() => {
+    fetchTransactions();
+
     /* Inject Fonts & Animations */
     if (!document.getElementById("it-fonts")) {
       const style = document.createElement("style");
@@ -138,25 +139,49 @@ function Transactions() {
     }
   }, []);
 
-  const stockInCount = transactions.filter(item => item.type === "IN").length;
-  const stockOutCount = transactions.filter(item => item.type === "OUT").length;
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token");
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [txnRes, prodRes] = await Promise.all([
+        axios.get("http://127.0.0.1:5000/api/transactions/", { headers }),
+        axios.get("http://127.0.0.1:5000/api/products/", { headers })
+      ]);
+      
+      setTransactions(txnRes.data);
+      setProducts(prodRes.data);
+    } catch (err) {
+      console.error("Fetch transactions failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleCommit = () => {
-    const freshTxn = {
-      id: `TXN-00${transactions.length + 1}`,
-      product: newTxn.product,
-      type: newTxn.type,
-      quantity: parseInt(newTxn.quantity),
-      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      status: "Completed"
-    };
+  const stockInCount = transactions.filter(item => item.transaction_type === "IN" || item.transaction_type === "RESTOCK").length;
+  const stockOutCount = transactions.filter(item => item.transaction_type === "OUT" || item.transaction_type === "SALE").length;
 
-    const updated = [freshTxn, ...transactions];
-    setTransactions(updated);
-    localStorage.setItem("inventrack_transactions", JSON.stringify(updated));
-    
-    setIsDrawerOpen(false);
-    setNewTxn({ product: OFFICIAL_PRODUCTS[0], type: "IN", quantity: 1 });
+  const handleCommit = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const payload = {
+        product_id: parseInt(newTxn.product_id), // Assuming ID is used
+        quantity: newTxn.type === "IN" ? parseInt(newTxn.quantity) : -Math.abs(parseInt(newTxn.quantity)),
+        transaction_type: newTxn.type,
+        notes: newTxn.notes
+      };
+
+      await axios.post("http://127.0.0.1:5000/api/transactions/", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setIsDrawerOpen(false);
+      fetchTransactions();
+    } catch (err) {
+      console.error("Log transaction failed:", err);
+      alert("Failed to log transaction. Check console for details.");
+    }
   };
 
   return (
@@ -178,10 +203,11 @@ function Transactions() {
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>Target Product</label>
                 <select 
                   style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: "0.95rem", fontWeight: "600", color: "#1e3a8a", outline: "none" }}
-                  value={newTxn.product}
-                  onChange={(e) => setNewTxn({ ...newTxn, product: e.target.value })}
+                  value={newTxn.product_id}
+                  onChange={(e) => setNewTxn({ ...newTxn, product_id: e.target.value })}
                 >
-                  {OFFICIAL_PRODUCTS.map(p => <option key={p} value={p}>{p}</option>)}
+                  <option value="">Select a Product</option>
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.product_id})</option>)}
                 </select>
               </div>
 
@@ -305,32 +331,38 @@ function Transactions() {
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((item) => (
-                  <tr key={item.id} style={S.tr} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                    <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>{item.id}</td>
-                    <td style={S.td}>{item.product}</td>
-                    <td style={S.td}>
-                      <span style={{ 
-                        ...S.statusBadge, 
-                        background: item.type === "IN" ? "#dcfce7" : "#fee2e2", 
-                        color: item.type === "IN" ? "#166534" : "#991b1b" 
-                      }}>
-                        {item.type === "IN" ? "⬇ STOCK IN" : "⬆ STOCK OUT"}
-                      </span>
-                    </td>
-                    <td style={{ ...S.td, fontWeight: "800" }}>{item.quantity} Units</td>
-                    <td style={{ ...S.td, color: "#64748b" }}>{item.date}</td>
-                    <td style={S.td}>
-                      <span style={{ 
-                         ...S.statusBadge, 
-                         background: item.status === "Completed" ? "#dbeafe" : "#fef9c3", 
-                         color: item.status === "Completed" ? "#1e40af" : "#a16207" 
-                      }}>
-                        {item.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {transactions.map((item) => {
+                  const isIncoming = item.transaction_type === "IN" || item.transaction_type === "RESTOCK";
+                  return (
+                    <tr key={item.id} style={S.tr} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                      <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>TXN-{item.id.toString().padStart(3, '0')}</td>
+                      <td style={S.td}>
+                        <div style={{ fontWeight: 800, color: "#1e293b" }}>{item.product_name}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>By: {item.user_name}</div>
+                      </td>
+                      <td style={S.td}>
+                        <span style={{ 
+                          ...S.statusBadge, 
+                          background: isIncoming ? "#dcfce7" : "#fee2e2", 
+                          color: isIncoming ? "#166534" : "#991b1b" 
+                        }}>
+                          {isIncoming ? "⬇ STOCK IN" : "⬆ STOCK OUT"}
+                        </span>
+                      </td>
+                      <td style={{ ...S.td, fontWeight: "800" }}>{Math.abs(item.quantity)} Units</td>
+                      <td style={{ ...S.td, color: "#64748b" }}>{item.timestamp}</td>
+                      <td style={S.td}>
+                        <span style={{ 
+                           ...S.statusBadge, 
+                           background: "#dbeafe", 
+                           color: "#1e40af" 
+                        }}>
+                          Completed
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

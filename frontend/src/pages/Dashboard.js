@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // Assets imports
 import logo from "../assets/logo.png";
@@ -252,15 +253,11 @@ function Dashboard() {
   const [role, setRole] = useState("");
   const [activeItem, setActiveItem] = useState("Dashboard");
   
-  // 📦 Load Real Data from Persistence
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem("inventrack_products");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem("inventrack_transactions");
-    return saved ? JSON.parse(saved) : [];
-  });
+  // 📦 Load Real Data from Backend
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([
     { id: 1, name: "Steelcase Gesture Chair", stock: 12, total: 20, sec: "NW-Floor", adjustment: 0 },
@@ -276,6 +273,30 @@ function Dashboard() {
     } else {
       setRole(savedRole);
     }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("access_token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [prodRes, orderRes, txnRes] = await Promise.all([
+          axios.get("http://127.0.0.1:5000/api/products/", { headers }),
+          axios.get("http://127.0.0.1:5000/api/orders/", { headers }),
+          axios.get("http://127.0.0.1:5000/api/transactions/", { headers })
+        ]);
+
+        setProducts(prodRes.data);
+        setOrders(orderRes.data);
+        setTransactions(txnRes.data);
+      } catch (err) {
+        console.error("Dashboard fetch failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
 
     /* Inject Design Assets */
     if (!document.getElementById("it-fonts")) {
@@ -521,54 +542,58 @@ function Dashboard() {
     );
   };
 
-  const renderStaffDashboard = () => (
-    <div className="it-fade-up">
-      <div style={S.kpiGrid}>
-        <div style={S.kpiCard("#10b981")}>
-          <span style={S.kpiLabel}>Movements Today</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#065f46" }}>24</h2>
-            <span style={S.kpiTrend(true)}>↑ 4%</span>
+  const renderStaffDashboard = () => {
+    const totalAssets = products.length;
+    const criticalStock = products.filter(p => p.current <= 5).length;
+    
+    return (
+      <div className="it-fade-up">
+        <div style={S.kpiGrid}>
+          <div style={S.kpiCard("#10b981")}>
+            <span style={S.kpiLabel}>Total Assets</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#065f46" }}>{totalAssets}</h2>
+              <span style={S.kpiTrend(true)}>Live</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>In central database</p>
           </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Verified transactions</p>
+
+          <div style={S.kpiCard("#f59e0b")}>
+            <span style={S.kpiLabel}>Critical Stock</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#92400e" }}>{criticalStock}</h2>
+              <span style={S.kpiTrend(criticalStock > 0)}>Alert</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Items below threshold (5)</p>
+          </div>
+
+          <div style={S.kpiCard("#2563eb")}>
+            <span style={S.kpiLabel}>Verified Orders</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>{orders.length}</h2>
+              <span style={S.kpiTrend(true)}>Active</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>System authenticated</p>
+          </div>
+
+          <div style={S.kpiCard("#6366f1")}>
+            <span style={S.kpiLabel}>Total Movements</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <h2 style={{ ...S.kpiValue, color: "#3730a3" }}>--</h2>
+              <span style={{ ...S.kpiTrend(true), background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>Ready</span>
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Processing cycle</p>
+          </div>
         </div>
 
-        <div style={S.kpiCard("#f59e0b")}>
-          <span style={S.kpiLabel}>Pending Verifications</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#92400e" }}>06</h2>
-            <span style={S.kpiTrend(false)}>↓ 2%</span>
+        <div style={S.analyticsGrid} className="it-delay-1">
+          <div style={S.standardCard("#2563eb")}>
+            <h3 style={S.cardTitle}>Daily Distribution Trend</h3>
+            <div style={{ height: "220px" }}>
+              <SapphireLineChart />
+            </div>
           </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Assigned to your terminal</p>
-        </div>
-
-        <div style={S.kpiCard("#2563eb")}>
-          <span style={S.kpiLabel}>Shift Efficiency</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>98.2%</h2>
-            <span style={S.kpiTrend(true)}>↑ 1%</span>
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>System audit performance</p>
-        </div>
-
-        <div style={S.kpiCard("#6366f1")}>
-          <span style={S.kpiLabel}>Active Assets</span>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-            <h2 style={{ ...S.kpiValue, color: "#3730a3" }}>142</h2>
-            <span style={{ ...S.kpiTrend(true), background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>Ready</span>
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Under your management</p>
-        </div>
-      </div>
-
-      <div style={S.analyticsGrid} className="it-delay-1">
-        <div style={S.standardCard("#2563eb")}>
-          <h3 style={S.cardTitle}>Daily Distribution Trend</h3>
-          <div style={{ height: "220px" }}>
-            <SapphireLineChart />
-          </div>
-        </div>
-        <div style={S.standardCard("#10b981")}>
+          <div style={S.standardCard("#10b981")}>
           <h3 style={S.cardTitle}>Terminal Distribution</h3>
           <div style={{ padding: "10px 0" }}>
             <SapphireDonut 
@@ -618,6 +643,7 @@ function Dashboard() {
       </div>
     </div>
   );
+};
 
 
   const renderUserRoles = () => (
@@ -751,24 +777,29 @@ function Dashboard() {
           </tr>
         </thead>
         <tbody>
-          {[
-            { id: "PO-8041", supplier: "Global Tech Inc.", date: "Today", value: "$12,400", status: "Approved", color: "#2563eb" },
-            { id: "PO-8040", supplier: "Office Max Co.", date: "Yesterday", value: "$1,850", status: "Pending", color: "#f59e0b" },
-            { id: "PO-8039", supplier: "Steelcase Mfg.", date: "15 Apr", value: "$4,200", status: "Received", color: "#10b981" },
-          ].map((o, i) => (
-            <tr key={i} style={S.tr}>
-              <td style={{ ...S.td, borderRadius: "12px 0 0 12px", color: "#2563eb" }}>{o.id}</td>
-              <td style={S.td}>{o.supplier}</td>
-              <td style={S.td}>{o.date}</td>
-              <td style={S.td}>{o.value}</td>
-              <td style={S.td}>
-                <span style={{ ...S.badge, background: o.color + "20", color: o.color }}>{o.status}</span>
-              </td>
-              <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
-                <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>View Invoice</button>
-              </td>
-            </tr>
-          ))}
+          {orders.map((o, i) => {
+            const statusColors = {
+              "Approved": "#2563eb",
+              "Pending": "#f59e0b",
+              "Received": "#10b981",
+              "Cancelled": "#ef4444"
+            };
+            const color = statusColors[o.status] || "#64748b";
+            return (
+              <tr key={i} style={S.tr}>
+                <td style={{ ...S.td, borderRadius: "12px 0 0 12px", color: "#2563eb" }}>{o.order_id}</td>
+                <td style={S.td}>{o.supplier}</td>
+                <td style={S.td}>{o.date}</td>
+                <td style={S.td}>{o.value}</td>
+                <td style={S.td}>
+                  <span style={{ ...S.badge, background: color + "20", color: color }}>{o.status}</span>
+                </td>
+                <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
+                  <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>View Invoice</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

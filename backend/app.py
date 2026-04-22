@@ -18,8 +18,13 @@ def create_app(config_class=Config):
     # Register blueprints
     from routes.auth import auth_bp
     from routes.products import products_bp
+    from routes.orders import orders_bp
+    from routes.transactions import transactions_bp
+    
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(products_bp, url_prefix='/api/products')
+    app.register_blueprint(orders_bp, url_prefix='/api/orders')
+    app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
 
     @app.route('/', methods=['GET'])
     def home():
@@ -29,7 +34,9 @@ def create_app(config_class=Config):
             "api_endpoints": {
                 "health": "/api/health",
                 "auth": "/api/auth",
-                "products": "/api/products"
+                "products": "/api/products",
+                "orders": "/api/orders",
+                "transactions": "/api/transactions"
             }
         }), 200
 
