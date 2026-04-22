@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
-// Assets imports
-import logo from "../assets/logo.png";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const S = {
   root: {
@@ -12,69 +12,6 @@ const S = {
     display: "flex",
     background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
     color: "#0f172a",
-  },
-
-  /* ── Sidebar (NEW LIGHT THEME) ── */
-  sidebar: {
-    width: "280px",
-    display: "flex",
-    flexDirection: "column",
-    padding: "32px 24px",
-    background: "#0f172a",
-    color: "#fff",
-    transition: "all .3s",
-    position: "relative",
-    zIndex: 10,
-    boxShadow: "10px 0 40px rgba(0,0,0,0.1)",
-  },
-  sidebarBrand: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    padding: "0 12px",
-    marginBottom: "40px",
-  },
-  sidebarBrandName: {
-    fontSize: "1.4rem",
-    fontWeight: "950",
-    color: "#ffffff",
-    letterSpacing: "-0.8px",
-  },
-  sidebarItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    padding: "14px 16px",
-    borderRadius: "16px",
-    fontSize: "0.9rem",
-    fontWeight: "800",
-    color: "#94a3b8",
-    cursor: "pointer",
-    transition: "all .2s ease",
-    border: "none",
-    background: "transparent",
-    textAlign: "left",
-  },
-  sidebarItemActive: {
-    color: "#ffffff",
-    background: "#2563eb",
-    boxShadow: "0 10px 20px rgba(37,99,235,0.3)",
-  },
-  sidebarFooter: {
-    marginTop: "auto",
-    padding: "20px 12px 0",
-    borderTop: "1.5px solid rgba(255,255,255,0.05)",
-  },
-  logoutBtn: {
-    width: "100%",
-    padding: "12px",
-    borderRadius: "12px",
-    background: "rgba(239,68,68,0.1)",
-    color: "#ef4444",
-    border: "none",
-    fontWeight: "900",
-    cursor: "pointer",
-    transition: "all .3s",
   },
 
   /* ── Main Dashboard UI ── */
@@ -375,25 +312,7 @@ function Dashboard() {
   ];
 
   const renderGlobalHeader = () => (
-    <div style={S.topBar}>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <h3 style={{ fontSize: "1.2rem", fontWeight: "950", background: "linear-gradient(135deg, #1e3a8a, #2563eb)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0, letterSpacing: "-0.5px" }}>Command Center</h3>
-        <p style={{ fontSize: "0.72rem", fontWeight: "800", color: "#94a3b8", margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-        <button style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", position: "relative" }}>
-          🔔
-          <div style={{ position: "absolute", top: 0, right: 0, width: "8px", height: "8px", background: "#ef4444", borderRadius: "50%", border: "2px solid #fff" }} />
-        </button>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "4px 12px", borderRadius: "14px", background: "#f8fafc", border: "1.5px solid #f1f5f9" }}>
-          <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: "0.82rem", fontWeight: "950", color: "#0f172a", margin: 0 }}>{role.toUpperCase()}</p>
-            <p style={{ fontSize: "0.68rem", fontWeight: "800", color: "#94a3b8", margin: 0 }}>Operations</p>
-          </div>
-          <img src={`https://ui-avatars.com/api/?name=${role}&background=2563eb&color=fff`} style={{ width: "36px", height: "36px", borderRadius: "10px" }} alt="user" />
-        </div>
-      </div>
-    </div>
+    <Navbar role={role} />
   );
 
   const renderDashboard = () => {
@@ -995,44 +914,18 @@ function Dashboard() {
   return (
     <div style={S.root}>
       {/* ── Sidebar ── */}
-      <aside style={S.sidebar}>
-        <div style={S.sidebarBrand}>
-          <div style={{ padding: "8px", background: "rgba(37,99,235,0.15)", borderRadius: "14px", boxShadow: "0 8px 24px rgba(37,99,235,0.2)" }}>
-            <img src={logo} alt="Logo" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
-          </div>
-          <span style={S.sidebarBrandName}>InvenTrack</span>
-        </div>
-
-        <nav style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
-          {current.menu.map(m => (
-            <button 
-              key={m} 
-              style={{ ...S.sidebarItem, ...(activeItem === m ? S.sidebarItemActive : {}) }}
-              onClick={() => handleMenuClick(m)}
-              onMouseEnter={(e) => { if (activeItem !== m) { e.target.style.background = "rgba(255,255,255,0.03)"; e.target.style.color = "#fff"; } }}
-              onMouseLeave={(e) => { if (activeItem !== m) { e.target.style.background = "transparent"; e.target.style.color = "#94a3b8"; } }}
-            >
-              {m}
-            </button>
-          ))}
-        </nav>
-
-        <div style={S.sidebarFooter}>
-          <button 
-            style={S.logoutBtn}
-            onClick={handleLogout}
-            onMouseEnter={(e) => { e.target.style.background = "#ef4444"; e.target.style.color = "#fff"; e.target.style.boxShadow = "0 8px 20px rgba(239,68,68,0.3)"; }}
-            onMouseLeave={(e) => { e.target.style.background = "rgba(239,68,68,0.1)"; e.target.style.color = "#ef4444"; e.target.style.boxShadow = "none"; }}
-          >
-            Sign Out
-          </button>
-        </div>
-      </aside>
+      <Sidebar 
+        role={role} 
+        activeItem={activeItem} 
+        onMenuClick={handleMenuClick} 
+        onLogout={handleLogout} 
+      />
 
       {/* ── Main ── */}
       <main style={S.main}>
         {renderGlobalHeader()}
         {renderContent()}
+        <Footer />
       </main>
     </div>
   );
