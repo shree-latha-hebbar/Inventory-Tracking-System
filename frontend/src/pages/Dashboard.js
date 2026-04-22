@@ -397,7 +397,6 @@ function Dashboard() {
   );
 
   const renderDashboard = () => {
-    const totalValue = products.reduce((acc, p) => {
     return (
       <>
         <div style={S.kpiGrid} className="it-fade-up">
