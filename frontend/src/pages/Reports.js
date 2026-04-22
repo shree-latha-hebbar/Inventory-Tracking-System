@@ -1,8 +1,7 @@
-import React, { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import logo from "../assets/logo.png";
-
-
 
 /* ─── Inline Styles ─────────────────────────────────────── */
 const S = {
@@ -13,8 +12,6 @@ const S = {
     color: "#0f172a",
     overflowX: "hidden",
   },
-
-  /* ── Header ── */
   header: {
     padding: "0 5%",
     height: "72px",
@@ -31,7 +28,6 @@ const S = {
   logoBox: { display: "flex", alignItems: "center", gap: "16px", cursor: "pointer" },
   logoImg: { width: "64px", height: "64px", objectFit: "contain" },
   logoName: { fontSize: "1.6rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" },
-
   nav: { display: "flex", gap: "32px", alignItems: "center" },
   navItem: (active) => ({
     fontSize: "0.85rem",
@@ -44,7 +40,6 @@ const S = {
     cursor: "pointer",
     transition: "all .2s ease",
   }),
-
   userBadge: {
     padding: "8px 16px",
     borderRadius: "14px",
@@ -58,14 +53,11 @@ const S = {
     gap: "8px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
   },
-
-  /* ── Content ── */
   main: {
     maxWidth: "1400px",
     margin: "0 auto",
     padding: "40px 5% 100px",
   },
-
   banner: {
     padding: "48px",
     borderRadius: "32px",
@@ -78,8 +70,6 @@ const S = {
   },
   bannerH2: { fontSize: "2.8rem", fontWeight: "950", marginBottom: "12px", letterSpacing: "-1.5px" },
   bannerSub: { fontSize: "1.1rem", opacity: 0.8, maxWidth: "600px", lineHeight: 1.6 },
-
-  /* ── Stats ── */
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -96,8 +86,6 @@ const S = {
   },
   statLabel: { fontSize: "0.85rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" },
   statValue: { fontSize: "3rem", fontWeight: "950", color: "#0f172a", letterSpacing: "-1.5px" },
-
-  /* ── Insights ── */
   insightGrid: { 
     display: "grid", 
     gridTemplateColumns: "1fr 1fr", 
@@ -118,7 +106,11 @@ const S = {
     padding: "18px 0", 
     borderBottom: "1.5px solid #f1f5f9" 
   },
-  tagName: { fontWeight: "700", color:function Reports() {
+  tagName: { fontWeight: "700", color: "#475569", fontSize: "0.95rem" },
+  tagValue: { fontWeight: "900", color: "#0f172a", fontSize: "1.1rem" },
+};
+
+function Reports() {
   const navigate = useNavigate();
   const [summary, setSummary] = useState({
     total_assets: 0,
@@ -178,7 +170,6 @@ const S = {
 
   return (
     <div style={S.root}>
-      {/* ── Unified Sapphire Header ── */}
       <header style={S.header}>
         <div style={{ display: "flex", alignItems: "center", gap: "60px" }}>
           <div style={S.logoBox} onClick={() => navigate("/")}>
@@ -208,18 +199,15 @@ const S = {
       </header>
 
       <main style={S.main}>
-        {/* ── Banner ── */}
         <div style={S.banner} className="it-fade-up">
           <h2 style={S.bannerH2}>Reports & Insights</h2>
           <p style={S.bannerSub}>
             Analyze inventory performance, stock velocity, and structural health of your 
             global warehouse blueprinters.
           </p>
-          {/* Subtle Decorative Element */}
           <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "400px", height: "400px", background: "rgba(59,130,246,0.1)", borderRadius: "50%", filter: "blur(80px)" }} />
         </div>
 
-        {/* ── Stats ── */}
         <div style={S.statsGrid} className="it-fade-up it-delay-1">
           <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.06)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
             <p style={S.statLabel}>Total Valuation</p>
@@ -239,12 +227,10 @@ const S = {
           </div>
         </div>
 
-        {/* ── Insights Section ── */}
         <div style={S.insightGrid} className="it-fade-up it-delay-2">
-          {/* Top Velocity */}
           <section style={S.section}>
             <h3 style={S.sectionH3}>Top Velocity Assets</h3>
-            <div style={{ spaceY: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               {velocity.length > 0 ? velocity.map((item, i) => (
                 <div key={i} style={S.listRow}>
                   <span style={S.tagName}>{item.name}</span>
@@ -254,27 +240,15 @@ const S = {
             </div>
           </section>
 
-          {/* Low Stock */}
           <section style={S.section}>
             <h3 style={{ ...S.sectionH3, color: "#1e3a8a" }}>Critical Replenishment</h3>
-            <div style={{ spaceY: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               {criticalList.length > 0 ? criticalList.map((item, i) => (
                 <div key={i} style={S.listRow}>
                   <span style={S.tagName}>{item.name}</span>
                   <span style={{ ...S.tagValue, color: item.color }}>{item.val}</span>
                 </div>
               )) : <p style={{color: "#16a34a", fontSize: "0.9rem"}}>All assets healthy.</p>}
-            </div>
-          </section>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-export default Reports;
-     </div>
-              ))}
             </div>
           </section>
         </div>
