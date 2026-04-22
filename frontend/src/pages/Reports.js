@@ -118,13 +118,18 @@ const S = {
     padding: "18px 0", 
     borderBottom: "1.5px solid #f1f5f9" 
   },
-  tagName: { fontWeight: "700", color: "#475569", fontSize: "0.95rem" },
-  tagValue: { fontWeight: "900", color: "#0f172a", fontSize: "1.1rem" },
-};
-
-function Reports() {
+  tagName: { fontWeight: "700", color:function Reports() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [summary, setSummary] = useState({
+    total_assets: 0,
+    total_value: 0,
+    critical_stock: 0,
+    movement_flow: 0,
+    system_health: 100
+  });
+  const [velocity, setVelocity] = useState([]);
+  const [criticalList, setCriticalList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const roleString = (localStorage.getItem("role") || "Staff").trim();
   const displayRole = roleString.charAt(0).toUpperCase() + roleString.slice(1).toLowerCase();
@@ -146,7 +151,30 @@ function Reports() {
       `;
       document.head.appendChild(style);
     }
+    fetchReports();
   }, []);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [sumRes, velRes, critRes] = await Promise.all([
+        axios.get("http://127.0.0.1:5000/api/reports/summary", { headers }),
+        axios.get("http://127.0.0.1:5000/api/reports/velocity", { headers }),
+        axios.get("http://127.0.0.1:5000/api/reports/critical-list", { headers })
+      ]);
+
+      setSummary(sumRes.data);
+      setVelocity(velRes.data);
+      setCriticalList(critRes.data);
+    } catch (err) {
+      console.error("Fetch reports failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={S.root}>
@@ -194,42 +222,35 @@ function Reports() {
         {/* ── Stats ── */}
         <div style={S.statsGrid} className="it-fade-up it-delay-1">
           <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.06)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
-            <p style={S.statLabel}>Total Assets</p>
-            <h2 style={S.statValue}>542</h2>
+            <p style={S.statLabel}>Total Valuation</p>
+            <h2 style={S.statValue}>${summary.total_value.toLocaleString()}</h2>
           </div>
           <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(239,68,68,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
             <p style={S.statLabel}>Critical Stock</p>
-            <h2 style={{ ...S.statValue, color: "#ef4444" }}>18</h2>
+            <h2 style={{ ...S.statValue, color: "#ef4444" }}>{summary.critical_stock}</h2>
           </div>
           <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(16,185,129,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
             <p style={S.statLabel}>Movement Flow</p>
-            <h2 style={{ ...S.statValue, color: "#10b981" }}>+12%</h2>
+            <h2 style={{ ...S.statValue, color: "#10b981" }}>{summary.movement_flow}</h2>
           </div>
           <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(30,58,138,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
-            <p style={S.statLabel}>System Health</p>
-            <h2 style={{ ...S.statValue, color: "#2563eb" }}>99.8%</h2>
+            <p style={S.statLabel}>Operational Assets</p>
+            <h2 style={{ ...S.statValue, color: "#2563eb" }}>{summary.total_assets}</h2>
           </div>
         </div>
 
-
-
         {/* ── Insights Section ── */}
         <div style={S.insightGrid} className="it-fade-up it-delay-2">
-          {/* Top Stock */}
+          {/* Top Velocity */}
           <section style={S.section}>
             <h3 style={S.sectionH3}>Top Velocity Assets</h3>
             <div style={{ spaceY: "10px" }}>
-              {[
-                { name: "HDMI 2.1 Ultra-Fast Cable", val: "678 Units" },
-                { name: "MacBook Pro M3 Silicon", val: "245 Units" },
-                { name: "Wireless Mechanical Core", val: "189 Units" },
-                { name: "USB-C Tactical Hub", val: "154 Units" },
-              ].map((item, i) => (
+              {velocity.length > 0 ? velocity.map((item, i) => (
                 <div key={i} style={S.listRow}>
                   <span style={S.tagName}>{item.name}</span>
                   <span style={S.tagValue}>{item.val}</span>
                 </div>
-              ))}
+              )) : <p style={{color: "#94a3b8", fontSize: "0.9rem"}}>No recent movements tracked.</p>}
             </div>
           </section>
 
@@ -237,16 +258,22 @@ function Reports() {
           <section style={S.section}>
             <h3 style={{ ...S.sectionH3, color: "#1e3a8a" }}>Critical Replenishment</h3>
             <div style={{ spaceY: "10px" }}>
-              {[
-                { name: "Ergonomic Mesh Support", val: "2 Units", color: "#ef4444" },
-                { name: "Industrial Steel Racking", val: "4 Units", color: "#f59e0b" },
-                { name: "Server Blade Enclosure", val: "6 Units", color: "#f59e0b" },
-                { name: "4K Reference Monitor", val: "8 Units", color: "#f59e0b" },
-              ].map((item, i) => (
+              {criticalList.length > 0 ? criticalList.map((item, i) => (
                 <div key={i} style={S.listRow}>
                   <span style={S.tagName}>{item.name}</span>
                   <span style={{ ...S.tagValue, color: item.color }}>{item.val}</span>
                 </div>
+              )) : <p style={{color: "#16a34a", fontSize: "0.9rem"}}>All assets healthy.</p>}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default Reports;
+     </div>
               ))}
             </div>
           </section>
