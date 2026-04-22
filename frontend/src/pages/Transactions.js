@@ -163,10 +163,15 @@ function Transactions() {
   const stockOutCount = transactions.filter(item => item.transaction_type === "OUT" || item.transaction_type === "SALE").length;
 
   const handleCommit = async () => {
+    if (!newTxn.product_id) {
+      alert("Please select a target product before committing.");
+      return;
+    }
+    
     try {
       const token = localStorage.getItem("access_token");
       const payload = {
-        product_id: parseInt(newTxn.product_id), // Assuming ID is used
+        product_id: parseInt(newTxn.product_id),
         quantity: newTxn.type === "IN" ? parseInt(newTxn.quantity) : -Math.abs(parseInt(newTxn.quantity)),
         transaction_type: newTxn.type,
         notes: newTxn.notes
@@ -177,10 +182,12 @@ function Transactions() {
       });
 
       setIsDrawerOpen(false);
+      setNewTxn({ product_id: "", type: "IN", quantity: 1, notes: "" }); // Reset
       fetchTransactions();
     } catch (err) {
       console.error("Log transaction failed:", err);
-      alert("Failed to log transaction. Check console for details.");
+      const msg = err.response?.data?.message || "Failed to log transaction.";
+      alert(msg);
     }
   };
 
@@ -236,7 +243,7 @@ function Transactions() {
                 </div>
               </div>
 
-              {/* QUANTITY */}
+               {/* QUANTITY */}
               <div>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>Quantity Units</label>
                 <input 
@@ -244,6 +251,17 @@ function Transactions() {
                   style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: "1.1rem", fontWeight: "800", outline: "none" }}
                   value={newTxn.quantity}
                   onChange={(e) => setNewTxn({ ...newTxn, quantity: e.target.value })}
+                />
+              </div>
+
+              {/* NOTES */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>Audit Notes (Optional)</label>
+                <textarea 
+                  placeholder="e.g. Broken packaging, Restock from Global Tech..."
+                  style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: "0.95rem", fontWeight: "600", outline: "none", minHeight: "100px", resize: "none" }}
+                  value={newTxn.notes}
+                  onChange={(e) => setNewTxn({ ...newTxn, notes: e.target.value })}
                 />
               </div>
 
