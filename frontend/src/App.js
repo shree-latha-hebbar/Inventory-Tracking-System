@@ -9,31 +9,31 @@ import Products from "./pages/Products";
 import EditProduct from "./pages/EditProduct";
 import AboutUs from "./pages/AboutUs";
 import Transactions from "./pages/Transactions";
-import Reports from "./pages/Report";
+import Reports from "./pages/Reports";
 import Contact from "./pages/Contact";
 
 function App() {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/about" element={<AboutUs />} />
+    return (
+        <div className="min-h-screen bg-slate-50">
+            <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/about" element={<AboutUs />} />
 
-        {/* Dashboard and Products */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/add-product" element={<EditProduct isNew={true} />} />
-        <Route path="/edit-product/:id" element={<EditProduct />} />
-        <Route path="/contact" element={<Contact />} />
-        {/* Redirect unknown routes to Home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
-  );
+                {/* Dashboard and Products */}
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/transactions" element={<Transactions />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/add-product" element={<EditProduct isNew={true} />} />
+                <Route path="/edit-product/:id" element={<EditProduct />} />
+                <Route path="/contact" element={<Contact />} />
+                {/* Redirect unknown routes to Home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </div>
+    );
 }
 
 export default App;

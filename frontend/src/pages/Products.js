@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // Assets imports
@@ -218,10 +219,9 @@ function Products() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   
   // 📦 Load from Storage or Fallback to INITIAL_PRODUCTS
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem("inventrack_products");
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const [role, setRole] = useState("staff");
   const [viewingAsset, setViewingAsset] = useState(null);
@@ -229,8 +229,25 @@ function Products() {
   useEffect(() => {
     const savedRole = localStorage.getItem("role") || "staff";
     setRole(savedRole);
+    fetchProducts();
+  }, []);
 
-    /* Inject Fonts & Animations */
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get("http://127.0.0.1:5000/api/products/", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(response.data);
+      setError(null);
+    } catch (err) {
+      console.error("Fetch products failed", err);
+      setError("Failed to synchronize with central inventory.");
+    } finally {
+      setLoading(false);
+    }
+  };
     if (!document.getElementById("it-fonts")) {
       const style = document.createElement("style");
       style.id = "it-fonts";
@@ -249,35 +266,44 @@ function Products() {
       `;
       document.head.appendChild(style);
     }
-  }, []);
 
-  const isStaff = role === "staff";
-  const isAdminOrManager = role === "admin" || role === "manager";
+  const isStaff = role.toLowerCase() === "staff";
+  const isAdminOrManager = role.toLowerCase() === "admin" || role.toLowerCase() === "manager";
 
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     if (window.confirm(`⚠️ ARE YOU SURE?\n\nDeleting "${name}" is a permanent action.`)) {
-      const updated = products.filter(p => p.id !== id);
-      setProducts(updated);
-      localStorage.setItem("inventrack_products", JSON.stringify(updated));
+      try {
+        const token = localStorage.getItem("access_token");
+        await axios.delete(`http://127.0.0.1:5000/api/products/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchProducts();
+      } catch (err) {
+        alert("Delete failed. Unauthorized or Network Error.");
+      }
     }
   };
 
-  const handleStockUpdate = (id) => {
-    const newVal = window.prompt("Enter new Stock Counter (Current Quantity):");
+  const handleStockUpdate = async (id, currentVal) => {
+    const newVal = window.prompt("Enter new Stock Counter (Current Quantity):", currentVal);
     if (newVal !== null && !isNaN(newVal)) {
-      const updated = products.map(p => {
-        if (p.id === id) return { ...p, current: parseInt(newVal) };
-        return p;
-      });
-      setProducts(updated);
-      localStorage.setItem("inventrack_products", JSON.stringify(updated));
+      try {
+        const token = localStorage.getItem("access_token");
+        await axios.put(`http://127.0.0.1:5000/api/products/${id}`, 
+          { current: parseInt(newVal) },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        fetchProducts();
+      } catch (err) {
+        alert("Update failed. Unauthorized or Network Error.");
+      }
     }
   };
 
   const filteredProducts = products.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchTerm.toLowerCase());
+      item.product_id.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "All Categories" ||
@@ -328,7 +354,7 @@ function Products() {
                   ← BACK
                 </button>
               </div>
-              <p style={{ color: "#64748b", marginTop: "8px", fontWeight: "700" }}>ASSET ID: {viewingAsset.id}</p>
+              <p style={{ color: "#64748b", marginTop: "8px", fontWeight: "700" }}>ASSET ID: {viewingAsset.product_id}</p>
             </div>
 
             <div style={{ background: "#f8fafc", padding: "32px", borderRadius: "24px", border: "1.5px solid #e2e8f0", marginBottom: "32px" }}>
@@ -348,7 +374,7 @@ function Products() {
               <h4 style={{ fontWeight: 800, marginBottom: "16px" }}>Logistics Blueprint</h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {[
-                  { label: "Serial Number", val: `SN-IT-${viewingAsset.id.split("-")[1]}-002` },
+                  { label: "Serial Number", val: `SN-IT-${viewingAsset.product_id.split("-")[1]}-002` },
                   { label: "Storage Location", val: viewingAsset.category === "Furniture" ? "Sector B-9" : "High-Security Vault A" },
                   { label: "Operational Status", val: viewingAsset.current > 0 ? "In Stock" : "Backordered" },
                   { label: "Reorder Point", val: "10 Units" },
@@ -408,6 +434,7 @@ function Products() {
         <div style={S.headerLeft}>
           <span style={S.breadcrumb} onClick={() => navigate("/dashboard")}>← Return to Dashboard</span>
           <h1 style={S.h1}>Inventory Vault</h1>
+          {error && <span style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: "700" }}>⚠️ {error}</span>}
         </div>
         {isAdminOrManager && (
           <button style={S.btnPrimary} onClick={() => navigate("/add-product")}>
@@ -481,13 +508,16 @@ function Products() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((item) => {
+              {loading ? (
+                <tr><td colSpan="8" style={{ padding: "60px", textAlign: "center", color: "#64748b", fontWeight: "700" }}>SYNCING WITH VAULT...</td></tr>
+              ) : (
+                filteredProducts.map((item) => {
                 const isOutOfStock = item.current === 0;
                 const isLowStock = item.current > 0 && item.current <= 5;
 
                 return (
-                  <tr key={item.id} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                    <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>{item.id}</td>
+                  <tr key={item.product_id} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                    <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>{item.product_id}</td>
                     <td style={S.td}>{item.name}</td>
                     <td style={S.td}>{item.category}</td>
                     <td style={S.td}>{item.price}</td>
@@ -516,27 +546,27 @@ function Products() {
                       
                       {isAdminOrManager && (
                         <button 
-                          style={S.actionBtn} 
-                          onMouseEnter={(e) => e.target.style.borderColor = "#2563eb"}
-                          onClick={() => navigate(`/edit-product/${item.id}`)}
-                        >
-                          Edit
-                        </button>
-                      )}
-                      
-                      {isStaff && (
-                         <button 
-                           style={{ ...S.actionBtn, color: "#2563eb", background: "#eff6ff" }} 
-                           onClick={() => handleStockUpdate(item.id)}
+                           style={S.actionBtn} 
+                           onMouseEnter={(e) => e.target.style.borderColor = "#2563eb"}
+                           onClick={() => navigate(`/edit-product/${item.product_id}`)}
                          >
-                           Update Stock
+                           Edit
                          </button>
-                      )}
-
-                      {isAdminOrManager && (
-                        <button 
-                          style={{ ...S.actionBtn, color: "#ef4444" }} 
-                          onClick={() => handleDelete(item.id, item.name)}
+                       )}
+                       
+                       {isStaff && (
+                          <button 
+                            style={{ ...S.actionBtn, color: "#2563eb", background: "#eff6ff" }} 
+                            onClick={() => handleStockUpdate(item.product_id, item.current)}
+                          >
+                            Update Stock
+                          </button>
+                       )}
+ 
+                       {isAdminOrManager && (
+                         <button 
+                           style={{ ...S.actionBtn, color: "#ef4444" }} 
+                           onClick={() => handleDelete(item.product_id, item.name)}
                           onMouseEnter={(e) => { e.target.style.borderColor = "#ef4444"; e.target.style.background = "#fef2f2"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; }}
                         >
@@ -546,10 +576,11 @@ function Products() {
                     </td>
                   </tr>
                 );
-              })}
+              })
+            )}
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan="7" style={{ padding: "60px", textAlign: "center", color: "#94a3b8" }}>
+                  <td colSpan="8" style={{ padding: "60px", textAlign: "center", color: "#94a3b8" }}>
                     No assets found matching your criteria.
                   </td>
                 </tr>

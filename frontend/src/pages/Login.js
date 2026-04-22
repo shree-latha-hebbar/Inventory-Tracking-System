@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // Assets imports
 import logo from "../assets/logo.png";
@@ -254,6 +255,8 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const rolePresets = {
     manager: { email: "manager@inventrack.com", password: "password123" },
@@ -267,10 +270,30 @@ function Login() {
     setPassword(rolePresets[role].password);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    localStorage.setItem("role", selectedRole);
-    navigate("/dashboard");
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/api/auth/login", {
+        email: email,
+        password: password,
+      });
+
+      if (response.status === 200) {
+        const { access_token, user } = response.data;
+        localStorage.setItem("access_token", access_token);
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("role", user.role || selectedRole);
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const roleOptions = [
@@ -414,9 +437,29 @@ function Login() {
             <button type="button" style={S.forgot} onMouseEnter={(e) => e.target.style.textDecoration = "underline"} onMouseLeave={(e) => e.target.style.textDecoration = "none"}>Forgot password?</button>
           </div>
 
+          {error && (
+            <div style={{
+              background: "#fee2e2",
+              border: "1.5px solid #fecaca",
+              color: "#b91c1c",
+              padding: "12px 16px",
+              borderRadius: "12px",
+              fontSize: "0.85rem",
+              fontWeight: "600",
+              marginBottom: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px"
+            }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
-            style={S.signInBtn}
+            disabled={loading}
+            style={{ ...S.signInBtn, opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
             onMouseEnter={(e) => { e.target.style.transform = "translateY(-1px)"; e.target.style.boxShadow = "0 12px 28px rgba(37,99,235,0.4)"; }}
             onMouseLeave={(e) => { e.target.style.transform = ""; e.target.style.boxShadow = S.signInBtn.boxShadow; }}
           >

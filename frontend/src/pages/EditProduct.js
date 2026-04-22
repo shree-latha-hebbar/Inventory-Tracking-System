@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
 // Assets imports
@@ -156,39 +157,23 @@ function EditProduct({ isNew = false }) {
     current: "",
   });
 
-  const [role, setRole] = useState("");
   const [focusedField, setFocusedField] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 🛡️ Role Guard
+    // 🛡️ User Authority Validation
     const userRole = localStorage.getItem("role") || "staff";
-    setRole(userRole);
-    
-    if (userRole === "staff") {
+    if (userRole.toLowerCase() === "staff") {
       alert("⚠️ ACCESS DENIED: You lack authorization to modify the Inventory Vault.");
       navigate("/dashboard");
       return;
     }
 
-    // Mock loading existing data if not new
     if (!isNew && id) {
-      const saved = localStorage.getItem("inventrack_products");
-      if (saved) {
-        const productsList = JSON.parse(saved);
-        const item = productsList.find(p => p.id === id);
-        if (item) {
-          setForm({
-            name: item.name,
-            category: item.category,
-            price: item.price,
-            total: item.total.toString(),
-            current: item.current.toString(),
-          });
-        }
-      }
+      fetchProduct();
     }
 
-    /* Inject Fonts & Animations */
+    /* Inject UI Enhancements */
     if (!document.getElementById("it-fonts")) {
       const style = document.createElement("style");
       style.id = "it-fonts";
@@ -204,19 +189,38 @@ function EditProduct({ isNew = false }) {
     }
   }, [id, isNew, navigate]);
 
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token");
+      const response = await axios.get(`http://127.0.0.1:5000/api/products/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const item = response.data;
+      setForm({
+        name: item.name,
+        category: item.category,
+        price: item.price,
+        total: item.total.toString(),
+        current: item.current.toString(),
+      });
+    } catch (err) {
+      console.error("Load failed", err);
+      alert("Failed to load asset blueprint from vault.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 📦 Retrieve current manifest
-    const saved = localStorage.getItem("inventrack_products");
-    let productsList = saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-
     const productData = {
-      id: isNew ? `PRD-${Date.now().toString().slice(-4)}` : id,
+      product_id: isNew ? `PRD-${Date.now().toString().slice(-4)}` : id,
       name: form.name,
       category: form.category,
       price: form.price.startsWith("$") ? form.price : `$${form.price}`,
@@ -224,14 +228,25 @@ function EditProduct({ isNew = false }) {
       current: parseInt(form.current),
     };
 
-    if (isNew) {
-      productsList.push(productData);
-    } else {
-      productsList = productsList.map(p => (p.id === id ? productData : p));
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("access_token");
+      if (isNew) {
+        await axios.post("http://127.0.0.1:5000/api/products/", productData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        await axios.put(`http://127.0.0.1:5000/api/products/${id}`, productData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+      navigate("/products");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Synchronization failed. Check network or authority.");
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem("inventrack_products", JSON.stringify(productsList));
-    navigate("/products");
   };
 
   const inputStyle = (name) => ({
@@ -350,13 +365,13 @@ function EditProduct({ isNew = false }) {
               onMouseEnter={(e) => { e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 14px 30px rgba(37,99,235,0.4)"; }}
               onMouseLeave={(e) => { e.target.style.transform = ""; e.target.style.boxShadow = S.btnPrimary.boxShadow; }}
             >
-              {isNew ? "Register Asset" : "Commit Changes"}
+              {loading ? "PROCESSING..." : (isNew ? "Register Asset" : "Commit Changes")}
             </button>
           </div>
         </form>
 
         <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#94a3b8", marginTop: "40px" }}>
-           🔒 Secure Administrative Session | Authorized Profile: <strong>{role}</strong>
+           🔒 Secure Administrative Session | Authorized Profile: <strong>{localStorage.getItem("role")}</strong>
         </p>
         </div>
       </div>
