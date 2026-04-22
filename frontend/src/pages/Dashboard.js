@@ -257,12 +257,6 @@ function Dashboard() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [summary, setSummary] = useState({
-    total_assets: 0,
-    total_value: 0,
-    critical_stock: 0,
-    movement_flow: 0
-  });
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([
@@ -286,17 +280,15 @@ function Dashboard() {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        const [prodRes, orderRes, txnRes, sumRes] = await Promise.all([
+        const [prodRes, orderRes, txnRes] = await Promise.all([
           axios.get("http://127.0.0.1:5000/api/products/", { headers }),
           axios.get("http://127.0.0.1:5000/api/orders/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/transactions/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/summary", { headers })
+          axios.get("http://127.0.0.1:5000/api/transactions/", { headers })
         ]);
 
         setProducts(prodRes.data);
         setOrders(orderRes.data);
         setTransactions(txnRes.data);
-        setSummary(sumRes.data);
       } catch (err) {
         console.error("Dashboard fetch failed:", err);
       } finally {
@@ -413,7 +405,7 @@ function Dashboard() {
           <div style={S.kpiCard("#2563eb")}>
             <span style={S.kpiLabel}>Inventory Value</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>${summary.total_value.toLocaleString()}</h2>
+              <h2 style={{ ...S.kpiValue, color: "#1e40af" }}>${totalValue.toLocaleString()}</h2>
               <span style={S.kpiTrend(true)}>↑ 100%</span>
             </div>
             <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Live Global Valuation</p>
@@ -422,7 +414,7 @@ function Dashboard() {
           <div style={S.kpiCard("#10b981")}>
             <span style={S.kpiLabel}>Operational Assets</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#065f46" }}>{summary.total_assets}</h2>
+              <h2 style={{ ...S.kpiValue, color: "#065f46" }}>{inventoryCount}</h2>
               <span style={S.kpiTrend(true)}>Active</span>
             </div>
             <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Units in Vault</p>
@@ -431,19 +423,19 @@ function Dashboard() {
           <div style={S.kpiCard("#ef4444")}>
             <span style={S.kpiLabel}>Critical Stock</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#991b1b" }}>{summary.critical_stock}</h2>
+              <h2 style={{ ...S.kpiValue, color: "#991b1b" }}>{criticalCount}</h2>
               <span style={S.kpiTrend(false)}>Alert</span>
             </div>
             <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Below Reorder Point</p>
           </div>
-          {/* Movement Flow */}
+          {/* Total Shipments */}
           <div style={S.kpiCard("#f59e0b")}>
             <span style={S.kpiLabel}>Recent In-Flows</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#92400e" }}>{summary.movement_flow}</h2>
+              <h2 style={{ ...S.kpiValue, color: "#92400e" }}>{shipmentCount}</h2>
               <span style={S.kpiTrend(true)}>↑</span>
             </div>
-            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Transactions (7d)</p>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Incoming Shipments</p>
           </div>
         </div>
 
@@ -551,13 +543,16 @@ function Dashboard() {
   };
 
   const renderStaffDashboard = () => {
+    const totalAssets = products.length;
+    const criticalStock = products.filter(p => p.current <= 5).length;
+    
     return (
       <div className="it-fade-up">
         <div style={S.kpiGrid}>
           <div style={S.kpiCard("#10b981")}>
             <span style={S.kpiLabel}>Total Assets</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#065f46" }}>{summary.total_assets}</h2>
+              <h2 style={{ ...S.kpiValue, color: "#065f46" }}>{totalAssets}</h2>
               <span style={S.kpiTrend(true)}>Live</span>
             </div>
             <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>In central database</p>
@@ -566,8 +561,8 @@ function Dashboard() {
           <div style={S.kpiCard("#f59e0b")}>
             <span style={S.kpiLabel}>Critical Stock</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#92400e" }}>{summary.critical_stock}</h2>
-              <span style={S.kpiTrend(summary.critical_stock > 0)}>Alert</span>
+              <h2 style={{ ...S.kpiValue, color: "#92400e" }}>{criticalStock}</h2>
+              <span style={S.kpiTrend(criticalStock > 0)}>Alert</span>
             </div>
             <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Items below threshold (5)</p>
           </div>
@@ -584,10 +579,10 @@ function Dashboard() {
           <div style={S.kpiCard("#6366f1")}>
             <span style={S.kpiLabel}>Total Movements</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
-              <h2 style={{ ...S.kpiValue, color: "#3730a3" }}>{summary.movement_flow}</h2>
-              <span style={{ ...S.kpiTrend(true), background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>7 Days</span>
+              <h2 style={{ ...S.kpiValue, color: "#3730a3" }}>--</h2>
+              <span style={{ ...S.kpiTrend(true), background: "rgba(99,102,241,0.1)", color: "#6366f1" }}>Ready</span>
             </div>
-            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Global activity flow</p>
+            <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>Processing cycle</p>
           </div>
         </div>
 
