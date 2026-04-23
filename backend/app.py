@@ -21,12 +21,18 @@ def create_app(config_class=Config):
     from routes.orders import orders_bp
     from routes.transactions import transactions_bp
     from routes.reports import reports_bp
+    from routes.suppliers import suppliers_bp
+    from routes.users import users_bp
+    from routes.notifications import notifications_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(products_bp, url_prefix='/api/products')
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
+    app.register_blueprint(suppliers_bp, url_prefix='/api/suppliers')
+    app.register_blueprint(users_bp, url_prefix='/api/users')
+    app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 
     @app.route('/', methods=['GET'])
     def home():

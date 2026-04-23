@@ -17,12 +17,20 @@ def get_orders():
 def create_order():
     data = request.get_json()
     
+    # Auto-generate Order ID if not provided
+    order_id = data.get('order_id')
+    if not order_id:
+        import random
+        import string
+        suffix = ''.join(random.choices(string.digits, k=4))
+        order_id = f"PO-{suffix}"
+    
     # Check if order_id already exists
-    if Order.query.filter_by(order_id=data.get('order_id')).first():
-        return jsonify({"message": f"Order ID {data.get('order_id')} already exists"}), 400
+    if Order.query.filter_by(order_id=order_id).first():
+        return jsonify({"message": f"Order ID {order_id} already exists"}), 400
 
     new_order = Order(
-        order_id=data.get('order_id'),
+        order_id=order_id,
         product_id=data.get('product_id'),
         supplier=data.get('supplier'),
         date=data.get('date'),

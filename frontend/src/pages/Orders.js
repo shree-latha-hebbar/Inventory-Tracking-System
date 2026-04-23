@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -66,6 +66,7 @@ const S = {
 
 function Orders() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
@@ -77,6 +78,10 @@ function Orders() {
 
   useEffect(() => {
     fetchData();
+    // 🚀 Handle pre-selected product from Dashboard
+    if (location.state?.preSelectedProduct) {
+      setNewOrder(prev => ({ ...prev, product_id: location.state.preSelectedProduct }));
+    }
   }, []);
 
   const fetchData = async () => {
