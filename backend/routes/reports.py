@@ -66,29 +66,28 @@ def get_velocity():
 @reports_bp.route('/sales-trend', methods=['GET'])
 @jwt_required()
 def get_sales_trend():
-    # Calculate daily sales value for the last 7 days
+    # Calculate daily movement volume for the last 7 days
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     txns = Transaction.query.filter(
-        Transaction.timestamp >= seven_days_ago,
-        Transaction.transaction_type == 'SALE'
+        Transaction.timestamp >= seven_days_ago
     ).all()
     
     # Initialize daily totals
-    daily_sales = {}
+    daily_activity = {}
     for i in range(7):
         date = (datetime.utcnow() - timedelta(days=i)).strftime('%Y-%m-%d')
-        daily_sales[date] = 0.0
+        daily_activity[date] = 0
         
     for t in txns:
         date_str = t.timestamp.strftime('%Y-%m-%d')
-        if date_str in daily_sales:
-            price = parse_price(t.product.price)
-            daily_sales[date_str] += abs(t.quantity) * price
+        if date_str in daily_activity:
+            # We sum the absolute volume of movement
+            daily_activity[date_str] += abs(t.quantity)
             
     # Format for chart (oldest to newest)
-    sorted_dates = sorted(daily_sales.keys())
+    sorted_dates = sorted(daily_activity.keys())
     results = [
-        {"date": d, "value": daily_sales[d]} 
+        {"date": d, "value": daily_activity[d]} 
         for d in sorted_dates
     ]
     

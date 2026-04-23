@@ -184,7 +184,7 @@ const SapphireLineChart = ({ data = [] }) => {
           {i === points.length - 1 && (
             <>
               <text x={p.x - 20} y={p.y - 15} fontSize="12" fontWeight="950" fill="#1e3a8a">
-                ${p.value.toLocaleString()}
+                {p.value.toLocaleString()} Units
               </text>
             </>
           )}
@@ -232,6 +232,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [role, setRole] = useState("");
   const [activeItem, setActiveItem] = useState("Dashboard");
+  const [refreshToggle, setRefreshToggle] = useState(0);
   
   // 📦 Load Real Data from Backend
   const [products, setProducts] = useState([]);
@@ -249,11 +250,7 @@ function Dashboard() {
   const [categoryDist, setCategoryDist] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [stockItems, setStockItems] = useState([
-    { id: 1, name: "Steelcase Gesture Chair", stock: 12, total: 20, sec: "NW-Floor", adjustment: 0 },
-    { id: 2, name: "MacBook Pro M3 Max", stock: 15, total: 30, sec: "Secure-Vault", adjustment: 0 },
-    { id: 3, name: "Logitech MX Master 3S", stock: 85, total: 100, sec: "Shelf-A3", adjustment: 0 },
-  ]);
+  const [stockItems, setStockItems] = useState([]);
 
   useEffect(() => {
     // 🛡️ Role Guard
@@ -265,32 +262,60 @@ function Dashboard() {
     }
 
     const fetchData = async () => {
+      // 🚀 Allow fetching if we are on Dashboard or Update Stock
+      const viewsNeedingData = ["Dashboard", "Update Stock"];
+      if (!viewsNeedingData.includes(activeItem)) return;
+      
       try {
         setLoading(true);
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        const [prodRes, orderRes, txnRes, sumRes, velocityRes, criticalRes, trendRes, catRes] = await Promise.all([
-          axios.get("http://127.0.0.1:5000/api/products/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/orders/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/transactions/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/summary", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/velocity", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/critical-list", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/sales-trend", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/category-distribution", { headers })
+        const fetchWithCatch = async (url) => {
+          try {
+            // 🚀 Add cache-busting timestamp to every request
+            const separator = url.includes("?") ? "&" : "?";
+            const cacheBustedUrl = `${url}${separator}t=${Date.now()}`;
+            const res = await axios.get(cacheBustedUrl, { headers });
+            return res.data;
+          } catch (e) {
+            console.error(`Failed to fetch ${url}:`, e);
+            return null;
+          }
+        };
+
+        const [prodData, orderData, txnData, sumData, velocityData, criticalData, trendData, catData] = await Promise.all([
+          fetchWithCatch("http://127.0.0.1:5000/api/products/"),
+          fetchWithCatch("http://127.0.0.1:5000/api/orders/"),
+          fetchWithCatch("http://127.0.0.1:5000/api/transactions/"),
+          fetchWithCatch("http://127.0.0.1:5000/api/reports/summary"),
+          fetchWithCatch("http://127.0.0.1:5000/api/reports/velocity"),
+          fetchWithCatch("http://127.0.0.1:5000/api/reports/critical-list"),
+          fetchWithCatch("http://127.0.0.1:5000/api/reports/sales-trend"),
+          fetchWithCatch("http://127.0.0.1:5000/api/reports/category-distribution")
         ]);
 
-        setProducts(prodRes.data);
-        setOrders(orderRes.data);
-        setTransactions(txnRes.data);
-        setSummary(sumRes.data);
-        setTopSelling(velocityRes.data);
-        setCriticalList(criticalRes.data);
-        setSalesTrend(trendRes.data);
-        setCategoryDist(catRes.data);
+        if (prodData) {
+          setProducts(prodData);
+          // 📦 Map real products to the Stock Adjustment table
+          setStockItems(prodData.map(p => ({
+            id: p.id,
+            name: p.name,
+            stock: p.current,
+            total: p.total,
+            sec: p.category || "General", // Using category as the warehouse section
+            adjustment: 0
+          })));
+        }
+        if (orderData) setOrders(orderData);
+        if (txnData) setTransactions(txnData);
+        if (sumData) setSummary(sumData);
+        if (velocityData) setTopSelling(velocityData);
+        if (criticalData) setCriticalList(criticalData);
+        if (trendData) setSalesTrend(trendData);
+        if (catData) setCategoryDist(catData);
       } catch (err) {
-        console.error("Dashboard fetch failed:", err);
+        console.error("Dashboard global fetch failed:", err);
       } finally {
         setLoading(false);
       }
@@ -312,7 +337,7 @@ function Dashboard() {
       `;
       document.head.appendChild(style);
     }
-  }, [navigate]);
+  }, [navigate, activeItem, refreshToggle]);
 
   const handleLogout = () => {
     localStorage.removeItem("role");
@@ -341,6 +366,9 @@ function Dashboard() {
   };
 
   const handleMenuClick = (m) => {
+    // 🔄 Force a data refresh every time a menu item is clicked
+    setRefreshToggle(prev => prev + 1);
+
     if (m === "Inventory Reports") {
       navigate("/reports");
       return;
@@ -416,9 +444,9 @@ function Dashboard() {
           <div style={S.standardCard("#2563eb")}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "26px" }}>
               <div>
-                <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Sales Analytics</h3>
+                <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Inventory Activity Trend</h3>
                 <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>
-                  ${salesTrend.reduce((acc, curr) => acc + curr.value, 0).toLocaleString()}
+                  {salesTrend.reduce((acc, curr) => acc + curr.value, 0).toLocaleString()} <span style={{ fontSize: "0.9rem", color: "#64748b" }}>Units Moved</span>
                 </h1>
               </div>
               <select style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569" }}>
@@ -904,9 +932,29 @@ function Dashboard() {
               </td>
               <td style={S.td}>{item.sec}</td>
               <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
-                <button onClick={() => {
+                <button onClick={async () => {
                     if (item.adjustment === 0) return;
-                    setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock + p.adjustment, adjustment: 0 } : p));
+                    
+                    try {
+                      const token = localStorage.getItem("access_token");
+                      await axios.post("http://127.0.0.1:5000/api/transactions/", {
+                        product_id: item.id,
+                        quantity: item.adjustment,
+                        transaction_type: item.adjustment > 0 ? "RESTOCK" : "ADJUSTMENT",
+                        notes: "Rapid stock adjustment from dashboard"
+                      }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                      });
+                      
+                      // 🔄 Force refresh dashboard data
+                      setRefreshToggle(prev => prev + 1);
+                      
+                      // Clear adjustment in UI
+                      setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock + p.adjustment, adjustment: 0 } : p));
+                    } catch (err) {
+                      console.error("Failed to commit adjustment:", err);
+                      alert("Error updating stock. Check console.");
+                    }
                 }} style={{ background: item.adjustment === 0 ? "#cbd5e1" : "#0f172a", color: "#fff", padding: "8px 16px", borderRadius: "10px", border: "none", fontWeight: 700, cursor: item.adjustment === 0 ? "not-allowed" : "pointer", fontSize: "0.85rem", transition: "all .2s" }}>
                   Commit
                 </button>
