@@ -1,117 +1,71 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import logo from "../assets/logo.png";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
-/* ─── Inline Styles ─────────────────────────────────────── */
+/* ─── Inline Styles (Analytics & Insights Theme) ────────── */
 const S = {
   root: {
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
     minHeight: "100vh",
     background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
     color: "#0f172a",
-    overflowX: "hidden",
-  },
-  header: {
-    padding: "0 5%",
-    height: "72px",
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    background: "rgba(255,255,255,0.7)",
-    backdropFilter: "blur(20px)",
-    borderBottom: "1.5px solid rgba(226, 232, 240, 0.4)",
-    position: "sticky",
-    top: 0,
-    zIndex: 1000,
   },
-  logoBox: { display: "flex", alignItems: "center", gap: "16px", cursor: "pointer" },
-  logoImg: { width: "64px", height: "64px", objectFit: "contain" },
-  logoName: { fontSize: "1.6rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" },
-  nav: { display: "flex", gap: "32px", alignItems: "center" },
-  navItem: (active) => ({
-    fontSize: "0.85rem",
-    fontWeight: "800",
-    color: active ? "#2563eb" : "#64748b",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    borderBottom: active ? "2.5px solid #2563eb" : "2.5px solid transparent",
-    padding: "24px 0",
-    cursor: "pointer",
-    transition: "all .2s ease",
-  }),
-  userBadge: {
-    padding: "8px 16px",
-    borderRadius: "14px",
-    background: "#fff",
-    border: "1.5px solid #e2e8f0",
-    fontSize: "0.82rem",
-    fontWeight: "800",
-    color: "#475569",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
-  },
+  
+  /* ── Main ── */
   main: {
-    maxWidth: "1400px",
-    margin: "0 auto",
-    padding: "40px 5% 100px",
-  },
-  banner: {
-    padding: "48px",
-    borderRadius: "32px",
-    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-    color: "#fff",
-    marginBottom: "40px",
-    position: "relative",
-    overflow: "hidden",
-    boxShadow: "0 20px 40px rgba(15,23,42,0.15)",
-  },
-  bannerH2: { fontSize: "2.8rem", fontWeight: "950", marginBottom: "12px", letterSpacing: "-1.5px" },
-  bannerSub: { fontSize: "1.1rem", opacity: 0.8, maxWidth: "600px", lineHeight: 1.6 },
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "32px",
-    marginBottom: "50px",
-  },
-  statCard: {
-    background: "#fff",
+    flex: 1,
     padding: "32px",
-    borderRadius: "28px",
-    border: "1.5px solid #e2e8f0",
-    boxShadow: "0 10px 30px rgba(15,23,42,0.03)",
-    transition: "all .3s cubic-bezier(0.16, 1, 0.3, 1)",
+    display: "flex",
+    flexDirection: "column",
+    gap: "32px",
+    maxWidth: "calc(100vw - 280px)",
   },
-  statLabel: { fontSize: "0.85rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" },
-  statValue: { fontSize: "3rem", fontWeight: "950", color: "#0f172a", letterSpacing: "-1.5px" },
-  insightGrid: { 
-    display: "grid", 
-    gridTemplateColumns: "1fr 1fr", 
-    gap: "32px" 
+  
+  headerLeft: { display: "flex", flexDirection: "column", gap: "6px" },
+  breadcrumb: {
+    display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem",
+    fontWeight: "700", color: "#94a3b8", cursor: "pointer",
+    background: "none", border: "none", padding: 0,
   },
-  section: {
-    background: "#fff",
-    padding: "40px",
-    borderRadius: "32px",
-    border: "1.5px solid #e2e8f0",
-    boxShadow: "0 10px 30px rgba(15,23,42,0.03)",
+  h1: { fontSize: "2.25rem", fontWeight: "900", letterSpacing: "-1px" },
+
+  container: { width: "100%" },
+  grid: {
+    display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+    gap: "32px", marginBottom: "40px"
   },
-  sectionH3: { fontSize: "1.6rem", fontWeight: "950", marginBottom: "24px", color: "#1e3a8a", letterSpacing: "-0.5px" },
-  listRow: { 
-    display: "flex", 
-    alignItems: "center", 
-    justifyContent: "space-between", 
-    padding: "18px 0", 
-    borderBottom: "1.5px solid #f1f5f9" 
+  card: {
+    padding: "32px", borderRadius: "28px", background: "#fff", border: "1.5px solid #e2e8f0",
+    display: "flex", flexDirection: "column", gap: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
   },
-  tagName: { fontWeight: "700", color: "#475569", fontSize: "0.95rem" },
-  tagValue: { fontWeight: "900", color: "#0f172a", fontSize: "1.1rem" },
+  cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  cardTitle: { fontSize: "1.1rem", fontWeight: "900", color: "#1e293b", letterSpacing: "-0.3px" },
+
+  /* ── Velocity List ── */
+  item: {
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "16px", borderRadius: "16px", background: "#f8fafc", border: "1px solid #f1f5f9"
+  },
+  itemName: { fontWeight: "800", color: "#334155", fontSize: "0.9rem" },
+  itemMeta: { fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase" },
+  itemValue: { fontWeight: "950", color: "#2563eb", fontSize: "1.1rem" },
+
+  /* ── Critical Alerts ── */
+  criticalItem: {
+    display: "flex", alignItems: "center", gap: "16px", padding: "16px",
+    borderRadius: "16px", background: "#fef2f2", border: "1.5px solid #fee2e2"
+  },
+  criticalName: { fontWeight: "800", color: "#991b1b", fontSize: "0.9rem" },
+  criticalStock: { fontWeight: "950", color: "#dc2626" }
 };
 
 function Reports() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [summary, setSummary] = useState({
     total_assets: 0,
     total_value: 0,
@@ -124,7 +78,7 @@ function Reports() {
   const [loading, setLoading] = useState(true);
 
   const roleString = (localStorage.getItem("role") || "Staff").trim();
-  const displayRole = roleString.charAt(0).toUpperCase() + roleString.slice(1).toLowerCase();
+  const role = roleString.toLowerCase();
 
   useEffect(() => {
     /* Inject Fonts & Animations */
@@ -168,90 +122,106 @@ function Reports() {
     }
   };
 
+  const handleMenuClick = (menu) => {
+    if (menu === "Dashboard") navigate("/dashboard");
+    if (menu === "Manage Products" || menu === "Product Search") navigate("/products");
+    if (menu === "Stock Orders") navigate("/orders");
+    if (menu === "Inventory Reports" || menu === "Transaction History") navigate("/transactions");
+    if (menu === "Reports") navigate("/reports");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("role");
+    localStorage.removeItem("access_token");
+    navigate("/");
+  };
+
   return (
     <div style={S.root}>
-      <header style={S.header}>
-        <div style={{ display: "flex", alignItems: "center", gap: "60px" }}>
-          <div style={S.logoBox} onClick={() => navigate("/")}>
-            <img src={logo} alt="IT" style={S.logoImg} />
-            <span style={S.logoName}>InvenTrack</span>
-          </div>
-          <nav style={S.nav}>
-            <span style={S.navItem(true)} onClick={() => navigate("/reports")}>REPORTS</span>
-          </nav>
-        </div>
-
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <div style={S.userBadge}>
-            👤 {displayRole}
-          </div>
-          <button
-            onClick={() => { localStorage.removeItem("role"); navigate("/"); }}
-            style={{ 
-              background: "#fee2e2", color: "#ef4444", border: "none", 
-              padding: "10px 18px", borderRadius: "14px", fontWeight: "800", 
-              fontSize: "0.8rem", cursor: "pointer" 
-            }}
-          >
-            LOGOUT
-          </button>
-        </div>
-      </header>
+      <Sidebar 
+        role={role} 
+        activeItem="Reports" 
+        onMenuClick={handleMenuClick} 
+        onLogout={handleLogout} 
+      />
 
       <main style={S.main}>
-        <div style={S.banner} className="it-fade-up">
-          <h2 style={S.bannerH2}>Reports & Insights</h2>
-          <p style={S.bannerSub}>
-            Analyze inventory performance, stock velocity, and structural health of your 
-            global warehouse blueprinters.
-          </p>
-          <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "400px", height: "400px", background: "rgba(59,130,246,0.1)", borderRadius: "50%", filter: "blur(80px)" }} />
-        </div>
+        <Navbar role={role} />
 
-        <div style={S.statsGrid} className="it-fade-up it-delay-1">
-          <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.06)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
-            <p style={S.statLabel}>Total Valuation</p>
-            <h2 style={S.statValue}>${summary.total_value.toLocaleString()}</h2>
+        <div className="it-fade-up">
+          <div style={S.headerLeft}>
+            <button style={S.breadcrumb} onClick={() => navigate("/dashboard")}>← Return to Dashboard</button>
+            <h1 style={S.h1}>Intelligence Hub</h1>
           </div>
-          <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(239,68,68,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
-            <p style={S.statLabel}>Critical Stock</p>
-            <h2 style={{ ...S.statValue, color: "#ef4444" }}>{summary.critical_stock}</h2>
-          </div>
-          <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(16,185,129,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
-            <p style={S.statLabel}>Movement Flow</p>
-            <h2 style={{ ...S.statValue, color: "#10b981" }}>{summary.movement_flow}</h2>
-          </div>
-          <div style={S.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(30,58,138,0.1)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = S.statCard.boxShadow; }}>
-            <p style={S.statLabel}>Operational Assets</p>
-            <h2 style={{ ...S.statValue, color: "#2563eb" }}>{summary.total_assets}</h2>
-          </div>
-        </div>
 
-        <div style={S.insightGrid} className="it-fade-up it-delay-2">
-          <section style={S.section}>
-            <h3 style={S.sectionH3}>Top Velocity Assets</h3>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {velocity.length > 0 ? velocity.map((item, i) => (
-                <div key={i} style={S.listRow}>
-                  <span style={S.tagName}>{item.name}</span>
-                  <span style={S.tagValue}>{item.val}</span>
+          <div style={S.container}>
+            {/* ── Key Metrics ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "24px", marginBottom: "40px" }}>
+              {[
+                { label: "Total Valuation", val: `$${summary.total_value.toLocaleString()}`, icon: "💎", color: "#2563eb" },
+                { label: "Critical Stock", val: summary.critical_stock, icon: "🚨", color: "#ef4444" },
+                { label: "Movement Flow", val: summary.movement_flow, icon: "📊", color: "#10b981" },
+                { label: "Operational Assets", val: summary.total_assets, icon: "🛡️", color: "#1e293b" }
+              ].map((m, i) => (
+                <div key={i} style={{ background: "#fff", padding: "24px", borderRadius: "24px", border: "1.5px solid #e2e8f0", display: "flex", alignItems: "center", gap: "20px" }}>
+                  <div style={{ width: "54px", height: "54px", borderRadius: "16px", background: `${m.color}10`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>{m.icon}</div>
+                  <div>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "4px" }}>{m.label}</p>
+                    <p style={{ fontSize: "1.5rem", fontWeight: 950, color: m.color, letterSpacing: "-1px" }}>{m.val}</p>
+                  </div>
                 </div>
-              )) : <p style={{color: "#94a3b8", fontSize: "0.9rem"}}>No recent movements tracked.</p>}
+              ))}
             </div>
-          </section>
 
-          <section style={S.section}>
-            <h3 style={{ ...S.sectionH3, color: "#1e3a8a" }}>Critical Replenishment</h3>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {criticalList.length > 0 ? criticalList.map((item, i) => (
-                <div key={i} style={S.listRow}>
-                  <span style={S.tagName}>{item.name}</span>
-                  <span style={{ ...S.tagValue, color: item.color }}>{item.val}</span>
+            <div style={S.grid}>
+              {/* ── VELOCITY ── */}
+              <div style={S.card}>
+                <div style={S.cardHeader}>
+                  <h3 style={S.cardTitle}>Top Velocity Assets</h3>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#16a34a", background: "#dcfce7", padding: "6px 12px", borderRadius: "10px" }}>LAST 30 DAYS</span>
                 </div>
-              )) : <p style={{color: "#16a34a", fontSize: "0.9rem"}}>All assets healthy.</p>}
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {velocity.length > 0 ? velocity.map((item, i) => (
+                    <div key={i} style={S.item}>
+                      <div>
+                        <p style={S.itemName}>{item.name}</p>
+                        <p style={S.itemMeta}>{item.category}</p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={S.itemValue}>{item.val}</p>
+                        <p style={{ fontSize: "0.7rem", fontWeight: 800, color: "#94a3b8" }}>TURNOVER</p>
+                      </div>
+                    </div>
+                  )) : <p style={{color: "#94a3b8", fontSize: "0.9rem"}}>No recent movements tracked.</p>}
+                </div>
+              </div>
+
+              {/* ── CRITICAL REPLENISHMENT ── */}
+              <div style={S.card}>
+                <div style={S.cardHeader}>
+                  <h3 style={S.cardTitle}>Critical Replenishment</h3>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#ef4444", background: "#fee2e2", padding: "6px 12px", borderRadius: "10px" }}>URGENT</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {criticalList.length > 0 ? criticalList.map((item, i) => (
+                    <div key={i} style={S.criticalItem}>
+                      <div style={{ width: "12px", height: "12px", borderRadius: "4px", background: item.color }} />
+                      <div style={{ flex: 1 }}>
+                        <p style={S.criticalName}>{item.name}</p>
+                        <p style={{ fontSize: "0.75rem", color: "#b91c1c", fontWeight: "700" }}>Threshold: 5 Units</p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={S.criticalStock}>{item.val} LEFT</p>
+                        <button style={{ border: "none", background: "none", color: "#dc2626", fontSize: "0.75rem", fontWeight: "900", textDecoration: "underline", cursor: "pointer" }}>ORDER NOW</button>
+                      </div>
+                    </div>
+                  )) : <p style={{color: "#16a34a", fontSize: "0.9rem"}}>All assets healthy.</p>}
+                </div>
+              </div>
             </div>
-          </section>
+          </div>
         </div>
+        <Footer />
       </main>
     </div>
   );

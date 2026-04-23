@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-
-// Assets imports
-import logo from "../assets/logo.png";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 /* ─── Inline Styles ─────────────────────────────────────── */
 const S = {
@@ -12,32 +12,19 @@ const S = {
     minHeight: "100vh",
     background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
     color: "#0f172a",
-    paddingBottom: "60px",
+    display: "flex",
   },
   
-  /* ── Header ── */
-  header: {
-    padding: "20px 5%",
+  /* ── Main ── */
+  main: {
+    flex: 1,
+    padding: "32px",
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    background: "rgba(255,255,255,0.7)",
-    backdropFilter: "blur(20px)",
-    borderBottom: "1.5px solid rgba(226, 232, 240, 0.4)",
-    position: "sticky",
-    top: 0,
-    zIndex: 1000,
+    flexDirection: "column",
+    gap: "32px",
+    maxWidth: "calc(100vw - 280px)",
   },
-  logoBox: { display: "flex", alignItems: "center", gap: "16px", cursor: "pointer" },
-  logoImg: { width: "64px", height: "64px", objectFit: "contain" },
-  logoName: { fontSize: "1.6rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" },
-  navBtns: { display: "flex", gap: "24px", alignItems: "center" },
-  navLink: { 
-    fontSize: "0.85rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", 
-    letterSpacing: "1px", cursor: "pointer", transition: "all .2s", padding: "8px 4px",
-    background: "none", border: "none"
-  },
-  activeLink: { color: "#2563eb", borderBottom: "2px solid #2563eb" },
+  
   headerLeft: {
     display: "flex",
     flexDirection: "column",
@@ -52,6 +39,9 @@ const S = {
     color: "#94a3b8",
     marginBottom: "4px",
     cursor: "pointer",
+    background: "none",
+    border: "none",
+    padding: 0,
   },
   h1: {
     fontSize: "2.25rem",
@@ -73,9 +63,7 @@ const S = {
 
   /* ── Stats Area ── */
   container: {
-    maxWidth: "1400px",
-    margin: "0 auto",
-    padding: "40px 5% 0",
+    width: "100%",
   },
   statsGrid: {
     display: "grid",
@@ -320,278 +308,243 @@ function Products() {
   const lowStockCount = products.filter((item) => item.current > 0 && item.current <= 5).length;
   const availableCount = products.filter((item) => item.current > 5).length;
 
+  const handleMenuClick = (menu) => {
+    if (menu === "Dashboard") navigate("/dashboard");
+    if (menu === "Manage Products" || menu === "Product Search") navigate("/products");
+    if (menu === "Stock Orders") navigate("/orders");
+    if (menu === "Inventory Reports" || menu === "Transaction History") navigate("/transactions");
+    if (menu === "Reports") navigate("/reports");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("role");
+    localStorage.removeItem("access_token");
+    navigate("/");
+  };
+
   return (
     <div style={S.root}>
-      {/* ── Asset Deep Dive Drawer ── */}
-      {viewingAsset && (
-        <div style={{ position: "fixed", top: 0, right: 0, width: "100%", height: "100%", zIndex: 1000, display: "flex" }}>
-          <div style={{ flex: 1, background: "rgba(15, 23, 42, 0.3)", backdropFilter: "blur(8px)" }} onClick={() => setViewingAsset(null)} />
-          <div className="it-slide-in" style={{ 
-            width: "550px", background: "#fff", height: "100%", boxShadow: "-20px 0 60px rgba(0,0,0,0.15)",
-            padding: "50px", overflowY: "auto", position: "relative" 
-          }}>
-            <style>{`@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
-            
-            
-            <div style={{ marginBottom: "32px" }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#2563eb", background: "#eff6ff", padding: "6px 14px", borderRadius: "10px", marginBottom: "16px", display: "inline-block" }}>
-                ASSET PROFILE
-              </span>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.5px", margin: 0 }}>{viewingAsset.name}</h2>
-                <button 
-                  onClick={() => setViewingAsset(null)}
-                  style={{ 
-                    background: "#f1f5f9", border: "none", color: "#64748b",
-                    padding: "8px 16px", borderRadius: "12px", cursor: "pointer", 
-                    fontWeight: "800", fontSize: "0.8rem", display: "flex",
-                    alignItems: "center", gap: "6px",
-                    transition: "all .2s"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#64748b"; }}
-                >
-                  ← BACK
-                </button>
-              </div>
-              <p style={{ color: "#64748b", marginTop: "8px", fontWeight: "700" }}>ASSET ID: {viewingAsset.product_id}</p>
-            </div>
+      <Sidebar 
+        role={role} 
+        activeItem={isAdminOrManager ? "Manage Products" : "Product Search"} 
+        onMenuClick={handleMenuClick} 
+        onLogout={handleLogout} 
+      />
 
-            <div style={{ background: "#f8fafc", padding: "32px", borderRadius: "24px", border: "1.5px solid #e2e8f0", marginBottom: "32px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Unit Valuation</p>
-                  <p style={{ fontWeight: 800, fontSize: "1.2rem" }}>{viewingAsset.price}</p>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Category</p>
-                  <p style={{ fontWeight: 800 }}>{viewingAsset.category}</p>
-                </div>
-              </div>
-            </div>
+      <main style={S.main}>
+        <Navbar role={role} />
 
-            <div style={{ marginBottom: "32px" }}>
-              <h4 style={{ fontWeight: 800, marginBottom: "16px" }}>Logistics Blueprint</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {[
-                  { label: "Serial Number", val: `SN-IT-${viewingAsset.product_id.split("-")[1]}-002` },
-                  { label: "Storage Location", val: viewingAsset.category === "Furniture" ? "Sector B-9" : "High-Security Vault A" },
-                  { label: "Operational Status", val: viewingAsset.current > 0 ? "In Stock" : "Backordered" },
-                  { label: "Reorder Point", val: "10 Units" },
-                ].map((spec, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>
-                    <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>{spec.label}</span>
-                    <span style={{ fontSize: "0.85rem", fontWeight: 800 }}>{spec.val}</span>
+        {/* ── Asset Deep Dive Drawer ── */}
+        {viewingAsset && (
+          <div style={{ position: "fixed", top: 0, right: 0, width: "100%", height: "100%", zIndex: 2000, display: "flex" }}>
+            <div style={{ flex: 1, background: "rgba(15, 23, 42, 0.3)", backdropFilter: "blur(8px)" }} onClick={() => setViewingAsset(null)} />
+            <div className="it-slide-in" style={{ 
+              width: "550px", background: "#fff", height: "100%", boxShadow: "-20px 0 60px rgba(0,0,0,0.15)",
+              padding: "50px", overflowY: "auto", position: "relative" 
+            }}>
+              <div style={{ marginBottom: "32px" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#2563eb", background: "#eff6ff", padding: "6px 14px", borderRadius: "10px", marginBottom: "16px", display: "inline-block" }}>
+                  ASSET PROFILE
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.5px", margin: 0 }}>{viewingAsset.name}</h2>
+                  <button 
+                    onClick={() => setViewingAsset(null)}
+                    style={{ 
+                      background: "#f1f5f9", border: "none", color: "#64748b",
+                      padding: "8px 16px", borderRadius: "12px", cursor: "pointer", 
+                      fontWeight: "800", fontSize: "0.8rem", display: "flex",
+                      alignItems: "center", gap: "6px",
+                      transition: "all .2s"
+                    }}
+                  >
+                    ← BACK
+                  </button>
+                </div>
+                <p style={{ color: "#64748b", marginTop: "8px", fontWeight: "700" }}>ASSET ID: {viewingAsset.product_id}</p>
+              </div>
+
+              <div style={{ background: "#f8fafc", padding: "32px", borderRadius: "24px", border: "1.5px solid #e2e8f0", marginBottom: "32px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Unit Valuation</p>
+                    <p style={{ fontWeight: 800, fontSize: "1.2rem" }}>{viewingAsset.price}</p>
                   </div>
-                ))}
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Category</p>
+                    <p style={{ fontWeight: 800 }}>{viewingAsset.category}</p>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <h4 style={{ fontWeight: 800, marginBottom: "16px" }}>Audit Timeline</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {[
-                  { date: "15 Apr 2026", msg: "Inventory level verified by Staff John." },
-                  { date: "02 Apr 2026", msg: "Received from Global Manufacturing Hub." },
-                  { date: "28 Mar 2026", msg: "Purchase Order #8039 approved by Admin." },
-                ].map((log, i) => (
-                  <div key={i} style={{ display: "flex", gap: "16px" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#cbd5e1", marginTop: "6px" }} />
-                    <div>
-                      <p style={{ fontSize: "0.85rem", fontWeight: 800 }}>{log.msg}</p>
-                      <p style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{log.date}</p>
+              <div style={{ marginBottom: "32px" }}>
+                <h4 style={{ fontWeight: 800, marginBottom: "16px" }}>Logistics Blueprint</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {[
+                    { label: "Serial Number", val: `SN-IT-${viewingAsset.product_id.split("-")[1]}-002` },
+                    { label: "Storage Location", val: viewingAsset.category === "Furniture" ? "Sector B-9" : "High-Security Vault A" },
+                    { label: "Operational Status", val: viewingAsset.current > 0 ? "In Stock" : "Backordered" },
+                    { label: "Reorder Point", val: "10 Units" },
+                  ].map((spec, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>
+                      <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 600 }}>{spec.label}</span>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 800 }}>{spec.val}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ fontWeight: 800, marginBottom: "16px" }}>Audit Timeline</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {[
+                    { date: "15 Apr 2026", msg: "Inventory level verified." },
+                    { date: "02 Apr 2026", msg: "Received from Global Manufacturing Hub." },
+                    { date: "28 Mar 2026", msg: "Purchase Order approved." },
+                  ].map((log, i) => (
+                    <div key={i} style={{ display: "flex", gap: "16px" }}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#cbd5e1", marginTop: "6px" }} />
+                      <div>
+                        <p style={{ fontSize: "0.85rem", fontWeight: 800 }}>{log.msg}</p>
+                        <p style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{log.date}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ── Unified Sapphire Header ── */}
-      <header style={{ ...S.header, padding: "20px 5%", position: "sticky", top: 0, zIndex: 1000, background: "rgba(255,255,255,0.7)", backdropFilter: "blur(20px)" }}>
-        <div style={S.logoBox} onClick={() => navigate("/")}>
-          <img src={logo} alt="IT" style={S.logoImg} />
-          <span style={S.logoName}>InvenTrack</span>
-        </div>
-        
-        <div style={S.navBtns}>
-          <button style={location.pathname === "/products" ? { ...S.navLink, ...S.activeLink } : S.navLink} onClick={() => navigate("/products")}>Products</button>
-          <button style={location.pathname === "/transactions" ? { ...S.navLink, ...S.activeLink } : S.navLink} onClick={() => navigate("/transactions")}>Transactions</button>
-          <button style={location.pathname === "/reports" ? { ...S.navLink, ...S.activeLink } : S.navLink} onClick={() => navigate("/reports")}>Reports</button>
-          
-          <div style={{ paddingLeft: "16px", borderLeft: "2px solid #e2e8f0", display: "flex", gap: "16px", alignItems: "center" }}>
-             <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>👤 {role}</span>
-             <button style={{ ...S.btnPrimary, background: "#ef4444", boxShadow: "0 8px 20px rgba(239,68,68,0.2)" }} onClick={() => { localStorage.removeItem("role"); navigate("/"); }}>Logout</button>
-          </div>
-        </div>
-      </header>
-
-      <div className="it-fade-up">
-        {/* ── Page Title ── */}
-        <div style={{ padding: "40px 5%", background: "#fff", borderBottom: "1.5px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={S.headerLeft}>
-          <span style={S.breadcrumb} onClick={() => navigate("/dashboard")}>← Return to Dashboard</span>
-          <h1 style={S.h1}>Inventory Vault</h1>
-          {error && <span style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: "700" }}>⚠️ {error}</span>}
-        </div>
-        {isAdminOrManager && (
-          <button style={S.btnPrimary} onClick={() => navigate("/add-product")}>
-            + New Asset
-          </button>
         )}
-      </div>
 
-      <div style={S.container}>
-        {/* ── Stats ── */}
-        <div style={S.statsGrid}>
-          <div style={S.statCard}>
-            <p style={S.statLabel}>Total Inventory Value</p>
-            <h2 style={{ ...S.statValue, color: "#0f172a" }}>
-              ${totalValue.toLocaleString()}
-            </h2>
-          </div>
-          <div style={S.statCard}>
-            <p style={S.statLabel}>Priority Restoration (Low Stock)</p>
-            <h2 style={{ ...S.statValue, color: "#ea580c" }}>{lowStockCount}</h2>
-          </div>
-          <div style={S.statCard}>
-            <p style={S.statLabel}>Operational Assets</p>
-            <h2 style={{ ...S.statValue, color: "#16a34a" }}>{availableCount}</h2>
-          </div>
-        </div>
-
-        {/* ── Search Bar ── */}
-        <div style={S.filterBar}>
-          <div style={S.searchBox}>
-            <div style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>
-              🔍
+        <div className="it-fade-up">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={S.headerLeft}>
+              <button style={S.breadcrumb} onClick={() => navigate("/dashboard")}>← Return to Dashboard</button>
+              <h1 style={S.h1}>Inventory Vault</h1>
+              {error && <span style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: "700" }}>⚠️ {error}</span>}
             </div>
-            <input
-              type="text"
-              placeholder="Search by Product Name or Serial ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={S.input}
-              onFocus={(e) => { e.target.style.borderColor = "#2563eb"; e.target.style.boxShadow = "0 8px 16px rgba(37,99,235,0.06)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; }}
-            />
-          </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            style={S.select}
-          >
-            <option>All Categories</option>
-            <option>Hardware</option>
-            <option>Monitor</option>
-            <option>Peripheral</option>
-            <option>Laptops</option>
-            <option>Furniture</option>
-          </select>
-        </div>
-
-        {/* ── Inventory Table ── */}
-        <div style={S.tableContainer}>
-          <table style={S.table}>
-            <thead>
-              <tr>
-                <th style={S.th}>Asset ID</th>
-                <th style={S.th}>Product Details</th>
-                <th style={S.th}>Category</th>
-                <th style={S.th}>Unit Price</th>
-                <th style={S.th}>Total Quantity</th>
-                <th style={S.th}>Current Quantity</th>
-                <th style={S.th}>Status</th>
-                <th style={S.th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan="8" style={{ padding: "60px", textAlign: "center", color: "#64748b", fontWeight: "700" }}>SYNCING WITH VAULT...</td></tr>
-              ) : (
-                filteredProducts.map((item) => {
-                const isOutOfStock = item.current === 0;
-                const isLowStock = item.current > 0 && item.current <= 5;
-
-                return (
-                  <tr key={item.product_id} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                    <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>{item.product_id}</td>
-                    <td style={S.td}>{item.name}</td>
-                    <td style={S.td}>{item.category}</td>
-                    <td style={S.td}>{item.price}</td>
-                    <td style={{ ...S.td, color: "#64748b" }}>{item.total} Units</td>
-                    <td style={{ ...S.td, color: isOutOfStock ? "#dc2626" : isLowStock ? "#a16207" : "#2563eb", fontWeight: "700" }}>
-                      {item.current} Units
-                    </td>
-                    <td style={{ ...S.td, whiteSpace: "nowrap" }}>
-                      <span style={{ 
-                        ...S.statusBadge,
-                        background: isOutOfStock ? "#fef2f2" : isLowStock ? "#fef9c3" : "#dcfce7",
-                        color: isOutOfStock ? "#dc2626" : isLowStock ? "#a16207" : "#166534",
-                        border: isOutOfStock ? "1px solid #fee2e2" : isLowStock ? "1px solid #fef08a" : "1px solid #bbfcda"
-                      }}>
-                        {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Operational"}
-                      </span>
-                    </td>
-                    <td style={{ ...S.td, whiteSpace: "nowrap" }}>
-                      <button 
-                        style={S.actionBtn} 
-                        onClick={() => setViewingAsset(item)}
-                        onMouseEnter={(e) => e.target.style.borderColor = "#2563eb"}
-                      >
-                        View
-                      </button>
-                      
-                      {isAdminOrManager && (
-                        <button 
-                           style={S.actionBtn} 
-                           onMouseEnter={(e) => e.target.style.borderColor = "#2563eb"}
-                           onClick={() => navigate(`/edit-product/${item.product_id}`)}
-                         >
-                           Edit
-                         </button>
-                       )}
-                       
-                       {isStaff && (
-                          <button 
-                            style={{ ...S.actionBtn, color: "#2563eb", background: "#eff6ff" }} 
-                            onClick={() => handleStockUpdate(item.product_id, item.current)}
-                          >
-                            Update Stock
-                          </button>
-                       )}
- 
-                       {isAdminOrManager && (
-                         <button 
-                           style={{ ...S.actionBtn, color: "#ef4444" }} 
-                           onClick={() => handleDelete(item.product_id, item.name)}
-                          onMouseEnter={(e) => { e.target.style.borderColor = "#ef4444"; e.target.style.background = "#fef2f2"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "#fff"; }}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
+            {isAdminOrManager && (
+              <button style={S.btnPrimary} onClick={() => navigate("/add-product")}>
+                + New Asset
+              </button>
             )}
-              {filteredProducts.length === 0 && (
-                <tr>
-                  <td colSpan="8" style={{ padding: "60px", textAlign: "center", color: "#94a3b8" }}>
-                    No assets found matching your criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          </div>
+
+          <div style={S.container}>
+            {/* ── Stats ── */}
+            <div style={S.statsGrid}>
+              <div style={S.statCard}>
+                <p style={S.statLabel}>Total Inventory Value</p>
+                <h2 style={{ ...S.statValue, color: "#0f172a" }}>
+                  ${totalValue.toLocaleString()}
+                </h2>
+              </div>
+              <div style={S.statCard}>
+                <p style={S.statLabel}>Priority Restoration (Low Stock)</p>
+                <h2 style={{ ...S.statValue, color: "#ea580c" }}>{lowStockCount}</h2>
+              </div>
+              <div style={S.statCard}>
+                <p style={S.statLabel}>Operational Assets</p>
+                <h2 style={{ ...S.statValue, color: "#16a34a" }}>{availableCount}</h2>
+              </div>
+            </div>
+
+            {/* ── Search Bar ── */}
+            <div style={S.filterBar}>
+              <div style={S.searchBox}>
+                <div style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>
+                  🔍
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by Product Name or Serial ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={S.input}
+                />
+              </div>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={S.select}
+              >
+                <option>All Categories</option>
+                <option>Hardware</option>
+                <option>Monitor</option>
+                <option>Peripheral</option>
+                <option>Laptops</option>
+                <option>Furniture</option>
+              </select>
+            </div>
+
+            {/* ── Inventory Table ── */}
+            <div style={S.tableContainer}>
+              <table style={S.table}>
+                <thead>
+                  <tr>
+                    <th style={S.th}>Asset ID</th>
+                    <th style={S.th}>Product Details</th>
+                    <th style={S.th}>Category</th>
+                    <th style={S.th}>Unit Price</th>
+                    <th style={S.th}>Total Quantity</th>
+                    <th style={S.th}>Current Quantity</th>
+                    <th style={S.th}>Status</th>
+                    <th style={S.th}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan="8" style={{ padding: "60px", textAlign: "center", color: "#64748b", fontWeight: "700" }}>SYNCING WITH VAULT...</td></tr>
+                  ) : (
+                    filteredProducts.map((item) => {
+                      const isOutOfStock = item.current === 0;
+                      const isLowStock = item.current > 0 && item.current <= 5;
+
+                      return (
+                        <tr key={item.product_id} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                          <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>{item.product_id}</td>
+                          <td style={S.td}>{item.name}</td>
+                          <td style={S.td}>{item.category}</td>
+                          <td style={S.td}>{item.price}</td>
+                          <td style={{ ...S.td, color: "#64748b" }}>{item.total} Units</td>
+                          <td style={{ ...S.td, color: isOutOfStock ? "#dc2626" : isLowStock ? "#a16207" : "#2563eb", fontWeight: "700" }}>
+                            {item.current} Units
+                          </td>
+                          <td style={{ ...S.td, whiteSpace: "nowrap" }}>
+                            <span style={{ 
+                              ...S.statusBadge,
+                              background: isOutOfStock ? "#fef2f2" : isLowStock ? "#fef9c3" : "#dcfce7",
+                              color: isOutOfStock ? "#dc2626" : isLowStock ? "#a16207" : "#166534",
+                              border: isOutOfStock ? "1px solid #fee2e2" : isLowStock ? "1px solid #fef08a" : "1px solid #bbfcda"
+                            }}>
+                              {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Operational"}
+                            </span>
+                          </td>
+                          <td style={{ ...S.td, whiteSpace: "nowrap" }}>
+                            <button style={S.actionBtn} onClick={() => setViewingAsset(item)}>View</button>
+                            {isAdminOrManager && (
+                              <button style={S.actionBtn} onClick={() => navigate(`/edit-product/${item.product_id}`)}>Edit</button>
+                            )}
+                            {isStaff && (
+                              <button style={{ ...S.actionBtn, color: "#2563eb", background: "#eff6ff" }} onClick={() => handleStockUpdate(item.product_id, item.current)}>Update Stock</button>
+                            )}
+                            {isAdminOrManager && (
+                              <button style={{ ...S.actionBtn, color: "#ef4444" }} onClick={() => handleDelete(item.product_id, item.name)}>Delete</button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+        <Footer />
+      </main>
     </div>
-  </div>
-);
+  );
 }
 
 export default Products;
