@@ -14,6 +14,15 @@ class Order(db.Model):
     status = db.Column(db.String(20), default='Pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __init__(self, order_id, product_id, supplier, date, quantity, value, status='Pending'):
+        self.order_id = order_id
+        self.product_id = product_id
+        self.supplier = supplier
+        self.date = date
+        self.quantity = quantity
+        self.value = value
+        self.status = status
+
 class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Order

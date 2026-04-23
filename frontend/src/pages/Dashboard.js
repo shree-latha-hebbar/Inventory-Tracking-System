@@ -136,29 +136,99 @@ const S = {
 
 /* ─── CUSTOM CHART COMPONENTS ────────────────────────── */
 
-const SapphireLineChart = () => (
-  <svg viewBox="0 0 500 150" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-    <defs>
-      <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#2563eb" stopOpacity="0.15" />
-        <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-    <path d="M0,120 Q50,110 100,80 T200,90 T300,50 T400,70 T500,30" fill="url(#lineGrad)" stroke="none" />
-    <path d="M0,120 Q50,110 100,80 T200,90 T300,50 T400,70 T500,30" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
-    <circle cx="200" cy="90" r="4" fill="#fff" stroke="#2563eb" strokeWidth="2.5" />
-    <text x="180" y="75" fontSize="12" fontWeight="950" fill="#1e3a8a">$22,480</text>
-  </svg>
-);
+const SapphireLineChart = ({ data = [] }) => {
+  if (!data || data.length === 0) return <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.85rem" }}>Calculating trends...</div>;
 
-const SapphireHorizontalBar = ({ name, value, color }) => (
+  const values = data.map(d => d.value);
+  const min = Math.min(...values) * 0.98;
+  const max = Math.max(...values) * 1.02;
+  const range = max - min || 1;
+
+  // Helper for Stepped Path
+  const getSteppedPath = () => {
+    if (data.length < 2) return "";
+    const pts = data.map((d, i) => ({
+      x: (i / (data.length - 1)) * 500,
+      y: 150 - ((d.value - min) / range) * 120
+    }));
+
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const curr = pts[i];
+      const next = pts[i + 1];
+      // Horizontal line to next X, then vertical line to next Y
+      d += ` L ${next.x} ${curr.y} L ${next.x} ${next.y}`;
+    }
+    return d;
+  };
+
+  const linePath = getSteppedPath();
+  const lastValue = data[data.length - 1]?.value || 0;
+  const lastY = 150 - ((lastValue - min) / range) * 120;
+
+  return (
+    <svg viewBox="0 0 500 150" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      <defs>
+        <linearGradient id="stepGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+          <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+        </linearGradient>
+        <pattern id="dotPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="0.5" fill="#e2e8f0" />
+        </pattern>
+        <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      
+      {/* Background Mesh */}
+      <rect width="500" height="150" fill="url(#dotPattern)" opacity="0.5" />
+      
+      {/* Subtle Vertical Dividers */}
+      {[0, 1, 2, 3, 4, 5].map(i => (
+        <line key={i} x1={i * 100} y1="0" x2={i * 100} y2="150" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+      ))}
+
+      <path d={`${linePath} L 500 150 L 0 150 Z`} fill="url(#stepGrad)" stroke="none" />
+      
+      {/* Glow layers */}
+      <path d={linePath} fill="none" stroke="#60a5fa" strokeWidth="6" strokeLinejoin="round" opacity="0.2" filter="url(#neonGlow)" />
+      <path d={linePath} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round" />
+      
+      <g>
+        {/* Pulsing Point */}
+        <circle cx="500" cy={lastY} r="8" fill="#2563eb" opacity="0.3">
+          <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="500" cy={lastY} r="5" fill="#2563eb" />
+        <circle cx="500" cy={lastY} r="2" fill="#fff" />
+        
+        {/* Glassmorphic Tooltip */}
+        <g transform={`translate(410, ${lastY - 45})`}>
+          <rect width="90" height="28" rx="10" fill="rgba(30, 58, 138, 0.9)" style={{ backdropFilter: "blur(4px)" }} />
+          <text x="45" y="18" fontSize="12" fontWeight="950" fill="#fff" textAnchor="middle" style={{ letterSpacing: "0.5px" }}>
+            ${lastValue.toLocaleString()}
+          </text>
+        </g>
+      </g>
+    </svg>
+  );
+};
+
+const SapphireHorizontalBar = ({ name, value, color, max = 10 }) => (
   <div style={{ marginBottom: "16px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
       <span style={{ fontSize: "0.8rem", fontWeight: "800", color: "#64748b" }}>{name}</span>
       <span style={{ fontSize: "0.8rem", fontWeight: "950", color: "#0f172a" }}>{value}k</span>
     </div>
     <div style={{ height: "10px", width: "100%", background: "#f1f5f9", borderRadius: "10px", overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${(value/10)*100}%`, background: color, borderRadius: "10px", transition: "width 1s ease" }} />
+      <div style={{ height: "100%", width: `${Math.min(100, (value / max) * 100)}%`, background: color, borderRadius: "10px", transition: "width 1s ease" }} />
     </div>
   </div>
 );
@@ -200,6 +270,12 @@ function Dashboard() {
     critical_stock: 0,
     movement_flow: 0
   });
+  const [criticalItems, setCriticalItems] = useState([]);
+  const [velocityItems, setVelocityItems] = useState([]);
+  const [valuationHistory, setValuationHistory] = useState([]);
+  const [categoryDistribution, setCategoryDistribution] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [chartView, setChartView] = useState("Monthly View");
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([
@@ -223,17 +299,37 @@ function Dashboard() {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        const [prodRes, orderRes, txnRes, sumRes] = await Promise.all([
+        const [prodRes, orderRes, txnRes, sumRes, critRes, veloRes, valRes, catRes, userRes] = await Promise.all([
           axios.get("http://127.0.0.1:5000/api/products/", { headers }),
           axios.get("http://127.0.0.1:5000/api/orders/", { headers }),
           axios.get("http://127.0.0.1:5000/api/transactions/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/summary", { headers })
+          axios.get("http://127.0.0.1:5000/api/reports/summary", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/critical-list", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/velocity", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/valuation-history", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/category-distribution", { headers }),
+          axios.get("http://127.0.0.1:5000/api/users/", { headers })
         ]);
 
         setProducts(prodRes.data);
         setOrders(orderRes.data);
         setTransactions(txnRes.data);
         setSummary(sumRes.data);
+        setCriticalItems(critRes.data);
+        setVelocityItems(veloRes.data);
+        setValuationHistory(valRes.data);
+        setCategoryDistribution(catRes.data);
+        setTeamMembers(userRes.data);
+        
+        // Initialize stock adjustment items from real products
+        setStockItems(prodRes.data.slice(0, 5).map(p => ({
+          id: p.id,
+          name: p.name,
+          stock: p.current,
+          total: p.total,
+          sec: "Main Warehouse", // Mock section for now
+          adjustment: 0
+        })));
       } catch (err) {
         console.error("Dashboard fetch failed:", err);
       } finally {
@@ -269,13 +365,13 @@ function Dashboard() {
       color: "#6366f1",
       icon: "🛡️",
       label: "System Administrator",
-      menu: ["Dashboard", "Manage Products", "User Roles", "Audit Logs", "System Config"]
+      menu: ["Dashboard", "Update Stock", "Manage Products", "User Roles", "Audit Logs", "System Config", "Product Search", "Transaction History"]
     },
     manager: {
       color: "#2563eb",
       icon: "📦",
       label: "Operations Manager",
-      menu: ["Dashboard", "Manage Products", "Stock Orders", "Inventory Reports", "Suppliers"]
+      menu: ["Dashboard", "Update Stock", "Manage Products", "Stock Orders", "Inventory Reports", "Product Search", "Transaction History"]
     },
     staff: {
       color: "#0ea5e9",
@@ -302,7 +398,7 @@ function Dashboard() {
     }
   };
 
-  const current = roleConfigs[role] || roleConfigs.staff;
+  const current = roleConfigs[role?.toLowerCase()] || roleConfigs.staff;
 
   const activities = [
     { id: "TX-9012", item: "Corporate Workstation", type: "Received", count: "14 Units", user: "John (Staff)", date: "2 mins ago", status: "Success" },
@@ -361,26 +457,39 @@ function Dashboard() {
           <div style={S.standardCard("#2563eb")}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "26px" }}>
               <div>
-                <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Sales Analytics</h3>
-                <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>$190,790</h1>
+                <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Inventory Value</h3>
+                <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>${summary.total_value.toLocaleString()}</h1>
               </div>
-              <select style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569" }}>
-                <option>Monthly View</option>
-                <option>Weekly View</option>
+              <select 
+                value={chartView}
+                onChange={(e) => setChartView(e.target.value)}
+                style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569", cursor: "pointer" }}
+              >
+                <option value="Monthly View">Monthly View (30d)</option>
+                <option value="Weekly View">Weekly View (7d)</option>
               </select>
             </div>
             <div style={{ height: "220px", width: "100%" }}>
-              <SapphireLineChart />
+              <SapphireLineChart data={chartView === "Weekly View" ? valuationHistory.slice(-7) : valuationHistory} />
             </div>
           </div>
 
           <div style={S.standardCard("#3b82f6")}>
-             <h3 style={S.cardTitle}>Top Selling Products</h3>
+             <h3 style={S.cardTitle}>Top Moving Products</h3>
              <div style={{ paddingTop: "8px" }}>
-               <SapphireHorizontalBar name="Laptop UltraBook M3" value={8.5} color="#2563eb" />
-               <SapphireHorizontalBar name="Wireless Mouse Pro" value={6.2} color="#3b82f6" />
-               <SapphireHorizontalBar name="Printer Canon L-Series" value={4.8} color="#60a5fa" />
-               <SapphireHorizontalBar name="Monitor 4K OLED" value={3.9} color="#93c5fd" />
+               {velocityItems.length > 0 ? (
+                 velocityItems.map((item, i) => (
+                   <SapphireHorizontalBar 
+                     key={i} 
+                     name={item.name} 
+                     value={parseInt(item.val)} 
+                     color={i === 0 ? "#2563eb" : i === 1 ? "#3b82f6" : "#60a5fa"} 
+                     max={parseInt(velocityItems[0].val) || 1}
+                   />
+                 ))
+               ) : (
+                 <p style={{ fontSize: "0.85rem", color: "#64748b" }}>No recent movements detected.</p>
+               )}
              </div>
           </div>
         </div>
@@ -393,29 +502,32 @@ function Dashboard() {
                <button style={{ background: "rgba(37,99,235,0.08)", border: "none", color: "#2563eb", fontWeight: "900", fontSize: "0.78rem", cursor: "pointer", padding: "6px 14px", borderRadius: "10px" }} onClick={() => navigate("/products")}>View Inventory</button>
              </div>
              <table style={S.table}>
-               <thead>
-                 <tr>
-                   <th style={S.th}>Asset</th>
-                   <th style={S.th}>SKU</th>
-                   <th style={S.th}>Qty</th>
-                   <th style={S.th}>Level</th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {[
-                   { name: "Laptop HP G9", sku: "HP-10102", qty: 3, status: "#ef4444" },
-                   { name: "HDMI 2.1 Cable", sku: "HD-32101", qty: 8, status: "#f59e0b" },
-                   { name: "Magic Mouse 2", sku: "MM-90221", qty: 2, status: "#ef4444" },
-                 ].map((row, i) => (
-                   <tr key={i}>
-                     <td style={S.td}>{row.name}</td>
-                     <td style={S.td}>{row.sku}</td>
-                     <td style={S.td}>{row.qty}</td>
-                     <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
+                <thead>
+                  <tr>
+                    <th style={S.th}>Asset</th>
+                    <th style={S.th}>Current Stock</th>
+                    <th style={S.th}>Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {criticalItems.length > 0 ? (
+                    criticalItems.map((row, i) => (
+                      <tr key={i}>
+                        <td style={S.td}>{row.name}</td>
+                        <td style={S.td}>{row.val}</td>
+                        <td style={S.td}>
+                          <span style={S.statusPip(row.color)} /> 
+                          <span style={{ color: row.color, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ ...S.td, textAlign: "center", color: "#64748b" }}>Stock levels healthy</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
            </div>
 
            {/* Stats Donut 1 */}
@@ -505,7 +617,7 @@ function Dashboard() {
           <div style={S.standardCard("#2563eb")}>
             <h3 style={S.cardTitle}>Daily Distribution Trend</h3>
             <div style={{ height: "220px" }}>
-              <SapphireLineChart />
+              <SapphireLineChart data={valuationHistory.slice(-7)} />
             </div>
           </div>
           <div style={S.standardCard("#10b981")}>
@@ -576,36 +688,35 @@ function Dashboard() {
           </tr>
         </thead>
         <tbody>
-          {[
-            { name: "John Doe", email: "john@inventrack.com", role: "Manager", access: "Operations", status: "Active", color: "#2563eb" },
-            { name: "Sarah Smith", email: "sarah@inventrack.com", role: "Admin", access: "Full Control", status: "Active", color: "#6366f1" },
-            { name: "Mike Ross", email: "mike@inventrack.com", role: "Staff", access: "Restricted", status: "Away", color: "#0ea5e9" },
-          ].map((u, i) => (
-            <tr key={i} style={S.tr}>
-              <td style={{ ...S.td, borderRadius: "12px 0 0 12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: u.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem" }}>
-                    {u.name.split(" ").map(n => n[0]).join("")}
+          {teamMembers.map((u, i) => {
+            const roleColor = u.role.toLowerCase() === 'admin' ? '#6366f1' : u.role.toLowerCase() === 'manager' ? '#2563eb' : '#0ea5e9';
+            return (
+              <tr key={i} style={S.tr}>
+                <td style={{ ...S.td, borderRadius: "12px 0 0 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: roleColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: "bold" }}>
+                      {u.username.charAt(0).toUpperCase()}
+                    </div>
+                    {u.username}
                   </div>
-                  {u.name}
-                </div>
-              </td>
-              <td style={S.td}>{u.email}</td>
-              <td style={S.td}>
-                <span style={{ ...S.badge, background: u.color + "20", color: u.color }}>{u.role}</span>
-              </td>
-              <td style={S.td}>{u.access}</td>
-              <td style={S.td}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: u.status === "Active" ? "#10b981" : "#94a3b8" }} />
-                  {u.status}
-                </div>
-              </td>
-              <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
-                <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>Edit Access</button>
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td style={S.td}>{u.email}</td>
+                <td style={S.td}>
+                  <span style={{ ...S.badge, background: roleColor + "20", color: roleColor }}>{u.role}</span>
+                </td>
+                <td style={S.td}>{u.role.toLowerCase() === 'admin' ? 'Full Control' : 'Operations'}</td>
+                <td style={S.td}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} />
+                    {u.status}
+                  </div>
+                </td>
+                <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
+                  <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>Edit Access</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -724,18 +835,31 @@ function Dashboard() {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
       <div style={S.activitySection}>
         <div style={S.sectionHeading}>📊 Category Distribution</div>
-        <div style={{ height: "240px", display: "flex", alignItems: "flex-end", gap: "24px", padding: "20px 0" }}>
-          {[
-            { label: "Hardware", value: 85, color: "#6366f1" },
-            { label: "Monitors", value: 45, color: "#2563eb" },
-            { label: "Peripheral", value: 65, color: "#0ea5e9" },
-            { label: "Furniture", value: 30, color: "#94a3b8" },
-          ].map((bar, i) => (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", gap: "12px" }}>
-              <div style={{ width: "100%", height: bar.value + "%", background: bar.color, borderRadius: "10px 10px 4px 4px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#94a3b8", textAlign: "center" }}>{bar.label}</span>
-            </div>
-          ))}
+        <div style={{ height: "240px", padding: "20px 0" }}>
+          {categoryDistribution.length > 0 ? (
+            <svg viewBox="0 0 500 200" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+              <defs>
+                <linearGradient id="catGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path 
+                d={`M0,200 ${categoryDistribution.map((bar, i) => `L${(i / (categoryDistribution.length - 1)) * 500},${200 - (bar.val / summary.total_assets) * 160}`).join(" ")} L500,200 Z`} 
+                fill="url(#catGrad)" 
+              />
+              <path 
+                d={`M${categoryDistribution.map((bar, i) => `${(i / (categoryDistribution.length - 1)) * 500},${200 - (bar.val / summary.total_assets) * 160}`).join(" ")}`} 
+                fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" 
+              />
+              {categoryDistribution.map((bar, i) => (
+                <g key={i}>
+                  <circle cx={(i / (categoryDistribution.length - 1)) * 500} cy={200 - (bar.val / summary.total_assets) * 160} r="5" fill="#fff" stroke="#6366f1" strokeWidth="2.5" />
+                  <text x={(i / (categoryDistribution.length - 1)) * 500} y="195" fontSize="10" fontWeight="800" fill="#94a3b8" textAnchor="middle">{bar.name}</text>
+                </g>
+              ))}
+            </svg>
+          ) : <p>No category data</p>}
         </div>
       </div>
       <div style={S.activitySection}>

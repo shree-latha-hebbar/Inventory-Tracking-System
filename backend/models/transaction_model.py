@@ -16,11 +16,23 @@ class Transaction(db.Model):
     product = db.relationship('Product', backref=db.backref('transactions', lazy=True))
     user = db.relationship('User', backref=db.backref('transactions', lazy=True))
 
+    def __init__(self, product_id, user_id, quantity, transaction_type, notes=None):
+        self.product_id = product_id
+        self.user_id = user_id
+        self.quantity = quantity
+        self.transaction_type = transaction_type
+        self.notes = notes
+
+from marshmallow import fields
+
 class TransactionSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Transaction
         load_instance = True
         include_fk = True
+    
+    product_name = fields.String(attribute="product.name", dump_only=True)
+    user_name = fields.String(attribute="user.username", dump_only=True)
 
 transaction_schema = TransactionSchema()
 transactions_schema = TransactionSchema(many=True)
