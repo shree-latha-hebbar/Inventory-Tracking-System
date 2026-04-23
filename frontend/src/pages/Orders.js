@@ -104,7 +104,9 @@ function Orders() {
       setIsDrawerOpen(false);
       fetchData();
     } catch (err) {
-      alert("Failed to create order");
+      console.error("Order creation failed:", err);
+      const msg = err.response?.data?.message || "Failed to create order";
+      alert(msg);
     }
   };
 

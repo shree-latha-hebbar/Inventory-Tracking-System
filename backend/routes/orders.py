@@ -17,22 +17,45 @@ def get_orders():
 def create_order():
     data = request.get_json()
     
-    # Check if order_id already exists
-    if Order.query.filter_by(order_id=data.get('order_id')).first():
-        return jsonify({"message": f"Order ID {data.get('order_id')} already exists"}), 400
-
+    # 🆔 Auto-generate Order ID if missing (e.g., PO-XXXX)
+    order_id = data.get('order_id')
+    if not order_id:
+        import random
+        order_id = f"PO-{random.randint(1000, 9999)}"
+        while Order.query.filter_by(order_id=order_id).first():
+            order_id = f"PO-{random.randint(1000, 9999)}"
+    
+    # 📅 Auto-set Date if missing
+    order_date = data.get('date') or datetime.utcnow().strftime('%d %b')
+    
+    # 💰 Calculate total value if missing
+    product_id = data.get('product_id')
+    quantity = int(data.get('quantity', 1))
+    order_value = data.get('value')
+    
+    if not order_value and product_id:
+        from models.product_model import Product
+        product = Product.query.get(product_id)
+        if product:
+            try:
+                # Use the parse_price helper from reports or replicate it
+                price_float = float(str(product.price).replace('$', '').replace(',', '').strip())
+                order_value = f"${(price_float * quantity):,.0f}"
+            except:
+                order_value = "$0"
+    
     new_order = Order(
-        order_id=data.get('order_id'),
-        product_id=data.get('product_id'),
+        order_id=order_id,
+        product_id=product_id,
         supplier=data.get('supplier'),
-        date=data.get('date'),
-        quantity=data.get('quantity', 1),
-        value=data.get('value'),
+        date=order_date,
+        quantity=quantity,
+        value=order_value or "$0",
         status=data.get('status', 'Pending')
     )
     db.session.add(new_order)
     db.session.commit()
-    return jsonify({"message": "Order created successfully"}), 201
+    return jsonify({"message": "Order created successfully", "order_id": order_id}), 201
 
 @orders_bp.route('/<int:id>', methods=['GET'])
 @jwt_required()
