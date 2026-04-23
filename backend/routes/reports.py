@@ -58,9 +58,59 @@ def get_velocity():
         if product:
             results.append({
                 "name": product.name,
-                "val": f"{count} Movements"
+                "count": count
             })
             
+    return jsonify(results), 200
+
+@reports_bp.route('/sales-trend', methods=['GET'])
+@jwt_required()
+def get_sales_trend():
+    # Calculate daily sales value for the last 7 days
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    txns = Transaction.query.filter(
+        Transaction.timestamp >= seven_days_ago,
+        Transaction.transaction_type == 'SALE'
+    ).all()
+    
+    # Initialize daily totals
+    daily_sales = {}
+    for i in range(7):
+        date = (datetime.utcnow() - timedelta(days=i)).strftime('%Y-%m-%d')
+        daily_sales[date] = 0.0
+        
+    for t in txns:
+        date_str = t.timestamp.strftime('%Y-%m-%d')
+        if date_str in daily_sales:
+            price = parse_price(t.product.price)
+            daily_sales[date_str] += abs(t.quantity) * price
+            
+    # Format for chart (oldest to newest)
+    sorted_dates = sorted(daily_sales.keys())
+    results = [
+        {"date": d, "value": daily_sales[d]} 
+        for d in sorted_dates
+    ]
+    
+    return jsonify(results), 200
+
+@reports_bp.route('/category-distribution', methods=['GET'])
+@jwt_required()
+def get_category_distribution():
+    products = Product.query.all()
+    dist = {}
+    for p in products:
+        dist[p.category] = dist.get(p.category, 0) + 1
+    
+    # Format for donut chart
+    colors = ["#1e3a8a", "#3b82f6", "#f59e0b", "#10b981", "#6366f1", "#0ea5e9"]
+    results = []
+    for i, (cat, count) in enumerate(dist.items()):
+        results.append({
+            "name": cat,
+            "val": count,
+            "color": colors[i % len(colors)]
+        })
     return jsonify(results), 200
 
 @reports_bp.route('/critical-list', methods=['GET'])
@@ -72,7 +122,8 @@ def get_critical_list():
     for p in critical_products:
         results.append({
             "name": p.name,
-            "val": f"{p.current} Units",
+            "sku": p.product_id,
+            "qty": p.current,
             "color": "#ef4444" if p.current <= 2 else "#f59e0b"
         })
     return jsonify(results), 200
