@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from models.db import db
 from models.transaction_model import Transaction, transactions_schema, transaction_schema
 from models.product_model import Product
+from utils.alerts import process_transaction_alerts
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 transactions_bp = Blueprint('transactions', __name__)
@@ -43,6 +44,9 @@ def create_transaction():
     
     db.session.add(new_txn)
     db.session.commit()
+    
+    # Check for low stock after transaction
+    process_transaction_alerts(product)
     
     return jsonify({
         "message": "Transaction logged and stock updated",
