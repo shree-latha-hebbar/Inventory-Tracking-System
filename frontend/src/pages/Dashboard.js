@@ -249,6 +249,7 @@ function Dashboard() {
   const [criticalList, setCriticalList] = useState([]);
   const [salesTrend, setSalesTrend] = useState([]);
   const [categoryDist, setCategoryDist] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([]);
@@ -276,6 +277,9 @@ function Dashboard() {
         setLoading(true);
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
+        
+        // 🔍 Run System Audit (one-time check on load)
+        axios.post("http://127.0.0.1:5000/api/notifications/audit", {}, { headers }).catch(() => {});
 
         const fetchWithCatch = async (url) => {
           try {
@@ -290,7 +294,7 @@ function Dashboard() {
           }
         };
 
-        const [prodData, orderData, txnData, sumData, velocityData, criticalData, trendData, catData] = await Promise.all([
+        const [prodData, orderData, txnData, sumData, velocityData, criticalData, trendData, catData, suppData] = await Promise.all([
           fetchWithCatch("http://127.0.0.1:5000/api/products/"),
           fetchWithCatch("http://127.0.0.1:5000/api/orders/"),
           fetchWithCatch("http://127.0.0.1:5000/api/transactions/"),
@@ -298,7 +302,8 @@ function Dashboard() {
           fetchWithCatch("http://127.0.0.1:5000/api/reports/velocity"),
           fetchWithCatch("http://127.0.0.1:5000/api/reports/critical-list"),
           fetchWithCatch("http://127.0.0.1:5000/api/reports/sales-trend"),
-          fetchWithCatch("http://127.0.0.1:5000/api/reports/category-distribution")
+          fetchWithCatch("http://127.0.0.1:5000/api/reports/category-distribution"),
+          fetchWithCatch("http://127.0.0.1:5000/api/suppliers/")
         ]);
 
         if (prodData) {
@@ -320,6 +325,7 @@ function Dashboard() {
         if (criticalData) setCriticalList(criticalData);
         if (trendData) setSalesTrend(trendData);
         if (catData) setCategoryDist(catData);
+        if (suppData) setSuppliers(suppData);
       } catch (err) {
         console.error("Dashboard global fetch failed:", err);
       } finally {
@@ -486,39 +492,39 @@ function Dashboard() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "24px" }} className="it-fade-up it-delay-2">
-           {/* Replenishment Table */}
-           <div style={S.standardCard("#ef4444")}>
-             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-               <h3 style={S.cardTitle}>Replenishment Alerts</h3>
-               <button style={{ background: "rgba(37,99,235,0.08)", border: "none", color: "#2563eb", fontWeight: "900", fontSize: "0.78rem", cursor: "pointer", padding: "6px 14px", borderRadius: "10px" }} onClick={() => navigate("/products")}>View Inventory</button>
-             </div>
-             <table style={S.table}>
-               <thead>
-                 <tr>
-                   <th style={S.th}>Asset</th>
-                   <th style={S.th}>SKU</th>
-                   <th style={S.th}>Qty</th>
-                   <th style={S.th}>Level</th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {criticalList.length > 0 ? (
-                   criticalList.map((row, i) => (
-                     <tr key={i}>
-                       <td style={S.td}>{row.name}</td>
-                       <td style={S.td}>{row.sku}</td>
-                       <td style={S.td}>{row.qty}</td>
-                       <td style={S.td}><span style={S.statusPip(row.color)} /> <span style={{ color: row.color, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
-                     </tr>
-                   ))
-                 ) : (
-                   <tr>
-                     <td colSpan="4" style={{ ...S.td, textAlign: "center", color: "#64748b" }}>All stock levels healthy</td>
-                   </tr>
-                 )}
-               </tbody>
-             </table>
-           </div>
+            {/* Replenishment Alerts */}
+            <div style={S.standardCard("#ef4444")}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 style={S.cardTitle}>Replenishment Alerts</h3>
+                <button style={{ background: "rgba(37,99,235,0.08)", border: "none", color: "#2563eb", fontWeight: "900", fontSize: "0.78rem", cursor: "pointer", padding: "6px 14px", borderRadius: "10px" }} onClick={() => navigate("/products")}>View Inventory</button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {criticalList.length > 0 ? criticalList.map((row, i) => (
+                  <div key={i} style={{ padding: "18px", borderRadius: "18px", background: "rgba(239, 68, 68, 0.03)", border: "1.5px solid rgba(239, 68, 68, 0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                      <div style={{ width: "12px", height: "12px", borderRadius: "4px", background: "#ef4444", boxShadow: "0 0 10px rgba(239,68,68,0.4)" }} />
+                      <div>
+                        <p style={{ fontWeight: 800, fontSize: "0.95rem", color: "#1e293b", margin: 0 }}>{row.name}</p>
+                        <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", margin: "2px 0 0" }}>Threshold: 5 Units</p>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontSize: "0.82rem", fontWeight: 950, color: "#ef4444", margin: 0 }}>{row.qty} LEFT</p>
+                      <button 
+                        onClick={() => navigate("/orders", { state: { preSelectedProduct: row.sku } })}
+                        style={{ background: "none", border: "none", padding: 0, color: "#dc2626", fontSize: "0.75rem", fontWeight: "900", textDecoration: "underline", cursor: "pointer", marginTop: "4px" }}
+                      >
+                        ORDER NOW
+                      </button>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontWeight: 800 }}>
+                    ✅ ALL STOCK LEVELS HEALTHY
+                  </div>
+                )}
+              </div>
+            </div>
 
            {/* Stats Donut 1 */}
            <div style={S.standardCard("#f59e0b")}>
@@ -874,31 +880,33 @@ function Dashboard() {
   );
 
   const renderSuppliers = () => (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
-      {[
-        { name: "Global Tech Inc.", type: "Hardware & Silicates", lead: "12 Days", rating: 4.8, contact: "support@globaltech.com" },
-        { name: "Steelcase Mfg.", type: "Premium Furniture", lead: "24 Days", rating: 4.5, contact: "logistics@steelcase.com" },
-        { name: "LG Display Hub", type: "Monitors & Panels", lead: "08 Days", rating: 4.9, contact: "hub@lgdisplay.com" },
-        { name: "Logitech Logistics", type: "Peripherals", lead: "05 Days", rating: 4.7, contact: "b2b@logitech.com" },
-      ].map((supp, i) => (
-        <div key={i} style={{ ...S.statCard, padding: "32px", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.06)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "none"; }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "24px" }} className="it-fade-up">
+      {suppliers.length > 0 ? suppliers.map((supp, i) => (
+        <div key={supp.id || i} style={{ ...S.statCard, padding: "32px", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.06)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "none"; }}>
            <div style={{ fontSize: "2rem", marginBottom: "16px" }}>🏢</div>
            <h4 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "4px" }}>{supp.name}</h4>
            <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-             <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#64748b", background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px" }}>{supp.type}</span>
+             <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#64748b", background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px" }}>{supp.category}</span>
+           </div>
+           <div style={{ marginBottom: "16px" }}>
+             <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 700 }}>{supp.contact_email}</p>
            </div>
            <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
              <div>
                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Avg Lead Time</p>
-               <p style={{ fontWeight: 800 }}>{supp.lead}</p>
+               <p style={{ fontWeight: 800 }}>{supp.lead_time}</p>
              </div>
              <div style={{ textAlign: "right" }}>
                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Performance</p>
-               <p style={{ fontWeight: 800, color: "#16a34a" }}>⭐ {supp.rating}</p>
+               <p style={{ fontWeight: 800, color: "#16a34a" }}>⭐ {supp.performance_rating}</p>
              </div>
            </div>
         </div>
-      ))}
+      )) : (
+        <div style={{ gridColumn: "1 / -1", padding: "100px", textAlign: "center", color: "#94a3b8", fontWeight: 800 }}>
+          NO SUPPLIERS REGISTERED IN VAULT
+        </div>
+      )}
     </div>
   );
 
