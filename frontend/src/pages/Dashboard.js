@@ -136,29 +136,72 @@ const S = {
 
 /* ─── CUSTOM CHART COMPONENTS ────────────────────────── */
 
-const SapphireLineChart = () => (
-  <svg viewBox="0 0 500 150" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-    <defs>
-      <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#2563eb" stopOpacity="0.15" />
-        <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-    <path d="M0,120 Q50,110 100,80 T200,90 T300,50 T400,70 T500,30" fill="url(#lineGrad)" stroke="none" />
-    <path d="M0,120 Q50,110 100,80 T200,90 T300,50 T400,70 T500,30" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
-    <circle cx="200" cy="90" r="4" fill="#fff" stroke="#2563eb" strokeWidth="2.5" />
-    <text x="180" y="75" fontSize="12" fontWeight="950" fill="#1e3a8a">$22,480</text>
-  </svg>
-);
+const SapphireLineChart = ({ data = [] }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: "0.8rem" }}>
+        No activity data available
+      </div>
+    );
+  }
 
-const SapphireHorizontalBar = ({ name, value, color }) => (
+  const maxValue = Math.max(...data.map(d => d.value), 100);
+  const width = 500;
+  const height = 150;
+  const padding = 20;
+
+  // Generate points
+  const points = data.map((d, i) => {
+    const x = (i / (data.length - 1)) * (width - 2 * padding) + padding;
+    const y = height - ((d.value / maxValue) * (height - 2 * padding) + padding);
+    return { x, y, value: d.value };
+  });
+
+  // Create SVG path
+  let pathD = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const curr = points[i];
+    const next = points[i + 1];
+    const cp1x = curr.x + (next.x - curr.x) / 2;
+    pathD += ` C ${cp1x} ${curr.y}, ${cp1x} ${next.y}, ${next.x} ${next.y}`;
+  }
+
+  const fillPathD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "100%", overflow: "visible" }}>
+      <defs>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={fillPathD} fill="url(#lineGrad)" stroke="none" />
+      <path d={pathD} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
+      {points.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r="3" fill="#fff" stroke="#2563eb" strokeWidth="1.5" />
+          {i === points.length - 1 && (
+            <>
+              <text x={p.x - 20} y={p.y - 15} fontSize="12" fontWeight="950" fill="#1e3a8a">
+                ${p.value.toLocaleString()}
+              </text>
+            </>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+};
+
+const SapphireHorizontalBar = ({ name, value, color, maxValue = 100, labelSuffix = "" }) => (
   <div style={{ marginBottom: "16px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
       <span style={{ fontSize: "0.8rem", fontWeight: "800", color: "#64748b" }}>{name}</span>
-      <span style={{ fontSize: "0.8rem", fontWeight: "950", color: "#0f172a" }}>{value}k</span>
+      <span style={{ fontSize: "0.8rem", fontWeight: "950", color: "#0f172a" }}>{value}{labelSuffix}</span>
     </div>
     <div style={{ height: "10px", width: "100%", background: "#f1f5f9", borderRadius: "10px", overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${(value/10)*100}%`, background: color, borderRadius: "10px", transition: "width 1s ease" }} />
+      <div style={{ height: "100%", width: `${(value / maxValue) * 100}%`, background: color, borderRadius: "10px", transition: "width 1s ease" }} />
     </div>
   </div>
 );
@@ -200,6 +243,10 @@ function Dashboard() {
     critical_stock: 0,
     movement_flow: 0
   });
+  const [topSelling, setTopSelling] = useState([]);
+  const [criticalList, setCriticalList] = useState([]);
+  const [salesTrend, setSalesTrend] = useState([]);
+  const [categoryDist, setCategoryDist] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([
@@ -223,17 +270,25 @@ function Dashboard() {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        const [prodRes, orderRes, txnRes, sumRes] = await Promise.all([
+        const [prodRes, orderRes, txnRes, sumRes, velocityRes, criticalRes, trendRes, catRes] = await Promise.all([
           axios.get("http://127.0.0.1:5000/api/products/", { headers }),
           axios.get("http://127.0.0.1:5000/api/orders/", { headers }),
           axios.get("http://127.0.0.1:5000/api/transactions/", { headers }),
-          axios.get("http://127.0.0.1:5000/api/reports/summary", { headers })
+          axios.get("http://127.0.0.1:5000/api/reports/summary", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/velocity", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/critical-list", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/sales-trend", { headers }),
+          axios.get("http://127.0.0.1:5000/api/reports/category-distribution", { headers })
         ]);
 
         setProducts(prodRes.data);
         setOrders(orderRes.data);
         setTransactions(txnRes.data);
         setSummary(sumRes.data);
+        setTopSelling(velocityRes.data);
+        setCriticalList(criticalRes.data);
+        setSalesTrend(trendRes.data);
+        setCategoryDist(catRes.data);
       } catch (err) {
         console.error("Dashboard fetch failed:", err);
       } finally {
@@ -362,25 +417,36 @@ function Dashboard() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "26px" }}>
               <div>
                 <h3 style={{ ...S.cardTitle, marginBottom: "4px" }}>Total Sales Analytics</h3>
-                <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>$190,790</h1>
+                <h1 style={{ fontSize: "1.85rem", fontWeight: "950", color: "#1e3a8a", letterSpacing: "-1px" }}>
+                  ${salesTrend.reduce((acc, curr) => acc + curr.value, 0).toLocaleString()}
+                </h1>
               </div>
               <select style={{ padding: "10px 14px", borderRadius: "12px", border: "1.5px solid #f1f5f9", fontSize: "0.8rem", fontWeight: "800", outline: "none", color: "#475569" }}>
-                <option>Monthly View</option>
-                <option>Weekly View</option>
+                <option>Last 7 Days</option>
               </select>
             </div>
             <div style={{ height: "220px", width: "100%" }}>
-              <SapphireLineChart />
+              <SapphireLineChart data={salesTrend} />
             </div>
           </div>
 
           <div style={S.standardCard("#3b82f6")}>
-             <h3 style={S.cardTitle}>Top Selling Products</h3>
+             <h3 style={S.cardTitle}>Top Moving Products</h3>
              <div style={{ paddingTop: "8px" }}>
-               <SapphireHorizontalBar name="Laptop UltraBook M3" value={8.5} color="#2563eb" />
-               <SapphireHorizontalBar name="Wireless Mouse Pro" value={6.2} color="#3b82f6" />
-               <SapphireHorizontalBar name="Printer Canon L-Series" value={4.8} color="#60a5fa" />
-               <SapphireHorizontalBar name="Monitor 4K OLED" value={3.9} color="#93c5fd" />
+               {topSelling.length > 0 ? (
+                 topSelling.map((item, i) => (
+                   <SapphireHorizontalBar 
+                     key={i} 
+                     name={item.name} 
+                     value={item.count} 
+                     maxValue={Math.max(...topSelling.map(t => t.count), 1)} 
+                     color={["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"][i % 5]} 
+                     labelSuffix=" mvmt"
+                   />
+                 ))
+               ) : (
+                 <p style={{ color: "#64748b", fontSize: "0.85rem" }}>No movement data</p>
+               )}
              </div>
           </div>
         </div>
@@ -402,56 +468,60 @@ function Dashboard() {
                  </tr>
                </thead>
                <tbody>
-                 {[
-                   { name: "Laptop HP G9", sku: "HP-10102", qty: 3, status: "#ef4444" },
-                   { name: "HDMI 2.1 Cable", sku: "HD-32101", qty: 8, status: "#f59e0b" },
-                   { name: "Magic Mouse 2", sku: "MM-90221", qty: 2, status: "#ef4444" },
-                 ].map((row, i) => (
-                   <tr key={i}>
-                     <td style={S.td}>{row.name}</td>
-                     <td style={S.td}>{row.sku}</td>
-                     <td style={S.td}>{row.qty}</td>
-                     <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
+                 {criticalList.length > 0 ? (
+                   criticalList.map((row, i) => (
+                     <tr key={i}>
+                       <td style={S.td}>{row.name}</td>
+                       <td style={S.td}>{row.sku}</td>
+                       <td style={S.td}>{row.qty}</td>
+                       <td style={S.td}><span style={S.statusPip(row.color)} /> <span style={{ color: row.color, fontWeight: "800", fontSize: "0.75rem" }}>CRITICAL</span></td>
+                     </tr>
+                   ))
+                 ) : (
+                   <tr>
+                     <td colSpan="4" style={{ ...S.td, textAlign: "center", color: "#64748b" }}>All stock levels healthy</td>
                    </tr>
-                 ))}
+                 )}
                </tbody>
              </table>
            </div>
 
            {/* Stats Donut 1 */}
            <div style={S.standardCard("#f59e0b")}>
-             <h3 style={S.cardTitle}>Sales Channel</h3>
+             <h3 style={S.cardTitle}>Category Distribution</h3>
              <div style={{ padding: "10px 0" }}>
               <SapphireDonut 
-                centerValue="$120k"
-                data={[{val: 45, color: "#1e3a8a"}, {val: 30, color: "#3b82f6"}, {val: 25, color: "#f59e0b"}]} 
+                data={categoryDist.length > 0 ? categoryDist : [{val: 100, color: "#f1f5f9"}]} 
               />
              </div>
-             <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
-                <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#1e3a8a" }} /> Online Distribution (45%)
-                </div>
-                <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} /> Offline Retail (30%)
-                </div>
+             <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px", maxHeight: "100px", overflowY: "auto" }}>
+                {categoryDist.map((cat, i) => (
+                  <div key={i} style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: cat.color }} /> {cat.name} ({Math.round((cat.val / categoryDist.reduce((a,b)=>a+b.val, 0)) * 100)}%)
+                  </div>
+                ))}
              </div>
            </div>
 
            {/* Stats Donut 2 */}
            <div style={S.standardCard("#10b981")}>
-             <h3 style={S.cardTitle}>User Distribution</h3>
+             <h3 style={S.cardTitle}>Recent Activity</h3>
              <div style={{ padding: "10px 0" }}>
               <SapphireDonut 
-                centerValue="70+"
-                data={[{val: 52, color: "#10b981"}, {val: 18, color: "#2563eb"}, {val: 30, color: "#6366f1"}]} 
+                centerValue={transactions.length.toString()}
+                data={[
+                  {val: transactions.filter(t => t.transaction_type === 'SALE').length, color: "#10b981"},
+                  {val: transactions.filter(t => t.transaction_type === 'RESTOCK').length, color: "#2563eb"},
+                  {val: transactions.filter(t => t.transaction_type !== 'SALE' && t.transaction_type !== 'RESTOCK').length, color: "#6366f1"}
+                ]} 
               />
              </div>
              <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "1fr", gap: "10px" }}>
                 <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Operational Staff (52%)
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Sales
                 </div>
                 <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Administrators (18%)
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Restocks
                 </div>
              </div>
            </div>
@@ -505,52 +575,62 @@ function Dashboard() {
           <div style={S.standardCard("#2563eb")}>
             <h3 style={S.cardTitle}>Daily Distribution Trend</h3>
             <div style={{ height: "220px" }}>
-              <SapphireLineChart />
+              <SapphireLineChart data={salesTrend} />
             </div>
           </div>
           <div style={S.standardCard("#10b981")}>
-          <h3 style={S.cardTitle}>Terminal Distribution</h3>
+          <h3 style={S.cardTitle}>Recent Status</h3>
           <div style={{ padding: "10px 0" }}>
             <SapphireDonut 
               centerValue="100%"
-              data={[{val: 65, color: "#10b981"}, {val: 35, color: "#2563eb"}]} 
+              data={[
+                {val: transactions.length, color: "#10b981"},
+                {val: criticalList.length, color: "#ef4444"}
+              ]} 
             />
           </div>
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Processed (65%)
+               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} /> Total Transactions ({transactions.length})
             </div>
             <div style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "850", display: "flex", alignItems: "center", gap: "8px" }}>
-               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#2563eb" }} /> Quality Check (35%)
+               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} /> Critical Items ({criticalList.length})
             </div>
           </div>
         </div>
       </div>
 
       <div style={S.standardCard("#6366f1")} className="it-delay-2">
-         <h3 style={S.cardTitle}>Your Shift Activity Trail</h3>
+         <h3 style={S.cardTitle}>Your Recent Activity Trail</h3>
          <table style={S.table}>
            <thead>
              <tr>
-               <th style={S.th}>Transaction</th>
+               <th style={S.th}>ID</th>
                <th style={S.th}>Asset</th>
-               <th style={S.th}>Method</th>
+               <th style={S.th}>Type</th>
+               <th style={S.th}>Qty</th>
                <th style={S.th}>Timestamp</th>
-               <th style={S.th}>Validation</th>
              </tr>
            </thead>
            <tbody>
-             {[
-               { id: "TX-Staff-01", name: "Steelcase Chair", method: "Barcoding", time: "10 mins ago", status: "#10b981" },
-               { id: "TX-Staff-02", name: "UltraWide 32\"", method: "RFID Scan", time: "45 mins ago", status: "#10b981" },
-               { id: "TX-Staff-03", name: "Nvidia RTX 4090", method: "Manual Adj.", time: "2 hours ago", status: "#f59e0b" },
-             ].map((row, i) => (
+             {transactions.slice(0, 5).map((row, i) => (
                <tr key={i}>
                  <td style={S.td}>{row.id}</td>
-                 <td style={S.td}>{row.name}</td>
-                 <td style={S.td}><span style={{ padding: "4px 8px", background: "#f1f5f9", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "900" }}>{row.method}</span></td>
-                 <td style={S.td}>{row.time}</td>
-                 <td style={S.td}><span style={S.statusPip(row.status)} /> <span style={{ color: row.status, fontWeight: "900", fontSize: "0.7rem" }}>VERIFIED</span></td>
+                 <td style={S.td}>{row.product?.name || `Product #${row.product_id}`}</td>
+                 <td style={S.td}>
+                   <span style={{ 
+                     padding: "4px 8px", 
+                     background: row.transaction_type === 'SALE' ? "#dcfce7" : "#f1f5f9", 
+                     color: row.transaction_type === 'SALE' ? "#166534" : "#475569",
+                     borderRadius: "8px", 
+                     fontSize: "0.7rem", 
+                     fontWeight: "900" 
+                   }}>
+                     {row.transaction_type}
+                   </span>
+                 </td>
+                 <td style={S.td}>{row.quantity}</td>
+                 <td style={S.td}>{new Date(row.timestamp).toLocaleString()}</td>
                </tr>
              ))}
            </tbody>
