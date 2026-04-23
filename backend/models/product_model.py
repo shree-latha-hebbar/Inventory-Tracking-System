@@ -13,14 +13,6 @@ class Product(db.Model):
     current = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, product_id, name, category, price, total=0, current=0):
-        self.product_id = product_id
-        self.name = name
-        self.category = category
-        self.price = price
-        self.total = total
-        self.current = current
-
 class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product

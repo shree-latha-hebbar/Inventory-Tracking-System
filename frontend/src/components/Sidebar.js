@@ -68,10 +68,10 @@ const sidebarStyles = {
 
 const roleConfigs = {
   admin: {
-    menu: ["Dashboard", "Update Stock", "Manage Products", "User Roles", "Audit Logs", "System Config", "Product Search", "Transaction History"]
+    menu: ["Dashboard", "Manage Products", "User Roles", "Audit Logs", "System Config"]
   },
   manager: {
-    menu: ["Dashboard", "Update Stock", "Manage Products", "Stock Orders", "Inventory Reports", "Product Search", "Transaction History"]
+    menu: ["Dashboard", "Manage Products", "Stock Orders", "Inventory Reports", "Suppliers"]
   },
   staff: {
     menu: ["Dashboard", "Product Search", "Update Stock", "Transaction History"]
@@ -79,7 +79,7 @@ const roleConfigs = {
 };
 
 function Sidebar({ role, activeItem, onMenuClick, onLogout }) {
-  const menuItems = roleConfigs[role?.toLowerCase()] || roleConfigs.staff;
+  const menuItems = roleConfigs[role] || roleConfigs.staff;
 
   return (
     <aside style={sidebarStyles.sidebar}>
