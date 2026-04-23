@@ -34,18 +34,18 @@ def create_order():
     db.session.commit()
     return jsonify({"message": "Order created successfully"}), 201
 
-@orders_bp.route('/<string:order_id>', methods=['GET'])
+@orders_bp.route('/<int:id>', methods=['GET'])
 @jwt_required()
-def get_order(order_id):
-    order = Order.query.filter_by(order_id=order_id).first()
+def get_order(id):
+    order = Order.query.get(id)
     if not order:
         return jsonify({"message": "Order not found"}), 404
     return jsonify(order_schema.dump(order)), 200
 
-@orders_bp.route('/<string:order_id>', methods=['PUT'])
+@orders_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
-def update_order(order_id):
-    order = Order.query.filter_by(order_id=order_id).first()
+def update_order(id):
+    order = Order.query.get(id)
     if not order:
         return jsonify({"message": "Order not found"}), 404
         
@@ -58,7 +58,7 @@ def update_order(order_id):
         from models.transaction_model import Transaction
         from flask_jwt_extended import get_jwt_identity
         
-        product = Product.query.filter_by(product_id=order.product_id).first()
+        product = Product.query.get(order.product_id)
         if product:
             # Increment product stock
             product.current += order.quantity
@@ -85,10 +85,10 @@ def update_order(order_id):
     db.session.commit()
     return jsonify(order_schema.dump(order)), 200
 
-@orders_bp.route('/<string:order_id>', methods=['DELETE'])
+@orders_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
-def delete_order(order_id):
-    order = Order.query.filter_by(order_id=order_id).first()
+def delete_order(id):
+    order = Order.query.get(id)
     if not order:
         return jsonify({"message": "Order not found"}), 404
         
