@@ -125,6 +125,12 @@ function Orders() {
     if (menu === "Stock Orders") navigate("/orders");
     if (menu === "Inventory Reports" || menu === "Transaction History") navigate("/transactions");
     if (menu === "Reports") navigate("/reports");
+
+    // 🛡️ Admin/Manager Navigation back to Dashboard
+    const dashboardItems = ["User Roles", "Audit Logs", "System Config"];
+    if (dashboardItems.includes(menu)) {
+      navigate("/dashboard", { state: { activeItem: menu } });
+    }
   };
 
   return (

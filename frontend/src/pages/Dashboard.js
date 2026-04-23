@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -230,6 +230,7 @@ const SapphireDonut = ({ data, centerValue }) => {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [role, setRole] = useState("");
   const [activeItem, setActiveItem] = useState("Dashboard");
   const [refreshToggle, setRefreshToggle] = useState(0);
@@ -259,6 +260,11 @@ function Dashboard() {
       navigate("/");
     } else {
       setRole(savedRole);
+    }
+
+    // 🚀 Handle navigation state from other pages
+    if (location.state?.activeItem) {
+      setActiveItem(location.state.activeItem);
     }
 
     const fetchData = async () => {
@@ -349,13 +355,13 @@ function Dashboard() {
       color: "#6366f1",
       icon: "🛡️",
       label: "System Administrator",
-      menu: ["Dashboard", "Manage Products", "User Roles", "Audit Logs", "System Config"]
+      menu: ["Dashboard", "Manage Products", "User Roles", "Audit Logs", "System Config", "Update Stock", "Transaction History"]
     },
     manager: {
       color: "#2563eb",
       icon: "📦",
       label: "Operations Manager",
-      menu: ["Dashboard", "Manage Products", "Stock Orders", "Inventory Reports", "Suppliers"]
+      menu: ["Dashboard", "Manage Products", "Stock Orders", "Inventory Reports", "Suppliers", "Update Stock", "Transaction History"]
     },
     staff: {
       color: "#0ea5e9",
@@ -385,7 +391,7 @@ function Dashboard() {
     }
   };
 
-  const current = roleConfigs[role] || roleConfigs.staff;
+  const current = roleConfigs[role?.toLowerCase()] || roleConfigs.staff;
 
   const activities = [
     { id: "TX-9012", item: "Corporate Workstation", type: "Received", count: "14 Units", user: "John (Staff)", date: "2 mins ago", status: "Success" },
