@@ -10,6 +10,7 @@ import EditProduct from "./pages/EditProduct";
 import AboutUs from "./pages/AboutUs";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
+import Orders from "./pages/Orders";
 import Contact from "./pages/Contact";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/transactions" element={<Transactions />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/orders" element={<Orders />} />
                 <Route path="/add-product" element={<EditProduct isNew={true} />} />
                 <Route path="/edit-product/:id" element={<EditProduct />} />
                 <Route path="/contact" element={<Contact />} />
