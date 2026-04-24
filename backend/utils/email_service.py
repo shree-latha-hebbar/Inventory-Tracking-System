@@ -62,10 +62,8 @@ def send_low_stock_alert(product_name, current_stock):
         </p>
     </div>
     """
-    # 📬 Send delivery confirmation to Supplier
-    send_email(subject, html_body, is_html=True)
-    # 📬 Send a copy to Sender for record-keeping
-    return send_email(f"📋 Copy: Delivery Confirmed - {order.order_id}", html_body, is_html=True)
+    # 📬 Send the alert
+    return send_email(subject, html_body, is_html=True)
 
 def send_order_approval_notification(order):
     """

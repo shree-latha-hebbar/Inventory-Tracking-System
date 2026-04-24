@@ -209,12 +209,18 @@ function Products() {
   
   // 📦 Load from Storage or Fallback to INITIAL_PRODUCTS
   const [products, setProducts] = useState([]);
+  const [activeProductsForStats, setActiveProductsForStats] = useState([]);
+  const [archivedCount, setArchivedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   const [role, setRole] = useState("staff");
   const [viewingAsset, setViewingAsset] = useState(null);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const [viewMode, setViewMode] = useState("active"); // "active" or "archived"
+  
+  // 🗑️ Delete Modal State
+  const [deleteModal, setDeleteModal] = useState({ show: false, id: null, name: null, reason: "Damaged" });
 
   useEffect(() => {
     const savedRole = localStorage.getItem("role") || "staff";
@@ -255,10 +261,29 @@ function Products() {
     try {
       setLoading(true);
       const token = localStorage.getItem("access_token");
-      const response = await axios.get("http://127.0.0.1:5001/api/products/", {
+      
+      // 1. Fetch current view products
+      const url = viewMode === "archived" 
+        ? "http://127.0.0.1:5001/api/products/archived" 
+        : "http://127.0.0.1:5001/api/products/";
+        
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProducts(response.data);
+
+      // 2. Fetch active products for global stats (always needed)
+      const activeRes = await axios.get("http://127.0.0.1:5001/api/products/", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setActiveProductsForStats(activeRes.data);
+
+      // 3. Fetch archived count for the button label
+      const archivedRes = await axios.get("http://127.0.0.1:5001/api/products/archived", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setArchivedCount(archivedRes.data.length);
+
       setError(null);
     } catch (err) {
       console.error("Fetch products failed", err);
@@ -268,21 +293,46 @@ function Products() {
     }
   };
 
+  useEffect(() => {
+    fetchProducts();
+  }, [viewMode]);
 
   const isStaff = role.toLowerCase() === "staff";
   const isAdminOrManager = role.toLowerCase() === "admin" || role.toLowerCase() === "manager";
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`⚠️ ARE YOU SURE?\n\nDeleting "${name}" is a permanent action.`)) {
-      try {
-        const token = localStorage.getItem("access_token");
-        await axios.delete(`http://127.0.0.1:5001/api/products/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        fetchProducts();
-      } catch (err) {
-        alert("Delete failed. Unauthorized or Network Error.");
-      }
+  const handleDelete = (id, name) => {
+    setDeleteModal({ show: true, id, name, reason: "Damaged" });
+  };
+
+  const handlePerformDelete = async (mode) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`http://127.0.0.1:5001/api/products/${deleteModal.id}?mode=${mode}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteModal.reason }
+      });
+      setToast({ 
+        show: true, 
+        message: mode === 'permanent' ? "Asset purged permanently." : `Asset archived as ${deleteModal.reason}.`, 
+        type: mode === 'permanent' ? "error" : "success" 
+      });
+      setDeleteModal({ show: false, id: null, name: null, reason: "Damaged" });
+      fetchProducts();
+    } catch (err) {
+      alert("Delete failed. Unauthorized or Network Error.");
+    }
+  };
+
+  const handleRestore = async (id) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(`http://127.0.0.1:5001/api/products/${id}/restore`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ show: true, message: "Asset restored to active inventory!", type: "success" });
+      fetchProducts();
+    } catch (err) {
+      alert("Restore failed. Unauthorized or Network Error.");
     }
   };
 
@@ -315,13 +365,13 @@ function Products() {
     return matchesSearch && matchesCategory;
   });
 
-  const totalValue = products.reduce((acc, p) => {
+  const totalValue = activeProductsForStats.reduce((acc, p) => {
     const priceNum = parseInt(p.price.replace(/[^0-9]/g, ""));
     return acc + (priceNum * p.current);
   }, 0);
 
-  const lowStockCount = products.filter((item) => item.current > 0 && item.current <= 5).length;
-  const availableCount = products.filter((item) => item.current > 5).length;
+  const lowStockCount = activeProductsForStats.filter((item) => item.current > 0 && item.current <= 5).length;
+  const availableCount = activeProductsForStats.filter((item) => item.current > 5).length;
 
   const handleMenuClick = (menu) => {
     if (menu === "Dashboard") navigate("/dashboard");
@@ -452,12 +502,40 @@ function Products() {
               <h1 style={S.h1}>Inventory Vault</h1>
               {error && <span style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: "700" }}>⚠️ {error}</span>}
             </div>
-            {isAdminOrManager && (
-              <button style={S.btnPrimary} onClick={() => navigate("/add-product")}>
-                + New Asset
-              </button>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+          <div style={{ display: "flex", background: "#e2e8f0", padding: "4px", borderRadius: "14px", gap: "4px" }}>
+            <button 
+              onClick={() => setViewMode("active")}
+              style={{ 
+                padding: "8px 16px", borderRadius: "10px", border: "none", 
+                fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
+                background: viewMode === "active" ? "#fff" : "transparent",
+                color: viewMode === "active" ? "#0f172a" : "#64748b",
+                boxShadow: viewMode === "active" ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
+              }}
+            >
+              Active Assets
+            </button>
+            <button 
+              onClick={() => setViewMode("archived")}
+              style={{ 
+                padding: "8px 16px", borderRadius: "10px", border: "none", 
+                fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
+                background: viewMode === "archived" ? "#fff" : "transparent",
+                color: viewMode === "archived" ? "#0f172a" : "#64748b",
+                boxShadow: viewMode === "archived" ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
+              }}
+            >
+              Archived ({archivedCount})
+            </button>
           </div>
+          {isAdminOrManager && viewMode === "active" && (
+            <button style={S.btnPrimary} onClick={() => navigate("/products/add")}>
+              + Register New Asset
+            </button>
+          )}
+        </div>
+      </div>
 
           <div style={S.container}>
             {/* ── Stats ── */}
@@ -517,7 +595,7 @@ function Products() {
                     <th style={S.th}>Unit Price</th>
                     <th style={S.th}>Total Quantity</th>
                     <th style={S.th}>Current Quantity</th>
-                    <th style={S.th}>Status</th>
+                    <th style={S.th}>{viewMode === 'active' ? 'Status' : 'Disposal Reason'}</th>
                     <th style={S.th}>Actions</th>
                   </tr>
                 </thead>
@@ -540,25 +618,49 @@ function Products() {
                             {item.current} Units
                           </td>
                           <td style={{ ...S.td, whiteSpace: "nowrap" }}>
-                            <span style={{ 
-                              ...S.statusBadge,
-                              background: isOutOfStock ? "#fef2f2" : isLowStock ? "#fef9c3" : "#dcfce7",
-                              color: isOutOfStock ? "#dc2626" : isLowStock ? "#a16207" : "#166534",
-                              border: isOutOfStock ? "1px solid #fee2e2" : isLowStock ? "1px solid #fef08a" : "1px solid #bbfcda"
-                            }}>
-                              {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Operational"}
-                            </span>
+                            {viewMode === 'active' ? (
+                              <span style={{ 
+                                ...S.statusBadge,
+                                background: isOutOfStock ? "#fef2f2" : isLowStock ? "#fef9c3" : "#dcfce7",
+                                color: isOutOfStock ? "#dc2626" : isLowStock ? "#a16207" : "#166534",
+                                border: isOutOfStock ? "1px solid #fee2e2" : isLowStock ? "1px solid #fef08a" : "1px solid #bbfcda"
+                              }}>
+                                {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "Operational"}
+                              </span>
+                            ) : (
+                              <span style={{ 
+                                ...S.statusBadge,
+                                background: "#f1f5f9",
+                                color: "#64748b",
+                                border: "1px solid #e2e8f0"
+                              }}>
+                                {item.disposal_reason || "Not Specified"}
+                              </span>
+                            )}
                           </td>
                           <td style={{ ...S.td, whiteSpace: "nowrap" }}>
                             <button style={S.actionBtn} onClick={() => setViewingAsset(item)}>View</button>
-                            {isAdminOrManager && (
-                              <button style={S.actionBtn} onClick={() => navigate(`/edit-product/${item.product_id}`)}>Edit</button>
-                            )}
-                            {isStaff && (
-                              <button style={{ ...S.actionBtn, color: "#2563eb", background: "#eff6ff" }} onClick={() => handleStockUpdate(item.product_id, item.current)}>Update Stock</button>
-                            )}
-                            {isAdminOrManager && (
-                              <button style={{ ...S.actionBtn, color: "#ef4444" }} onClick={() => handleDelete(item.product_id, item.name)}>Delete</button>
+                            {viewMode === "active" ? (
+                              <>
+                                {isAdminOrManager && (
+                                  <button style={S.actionBtn} onClick={() => navigate(`/edit-product/${item.product_id}`)}>Edit</button>
+                                )}
+                                {isStaff && (
+                                  <button style={{ ...S.actionBtn, color: "#2563eb", background: "#eff6ff" }} onClick={() => handleStockUpdate(item.product_id, item.current)}>Update Stock</button>
+                                )}
+                                {isAdminOrManager && (
+                                  <button style={{ ...S.actionBtn, color: "#ef4444" }} onClick={() => handleDelete(item.product_id, item.name)}>Delete</button>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {isAdminOrManager && (
+                                  <button style={{ ...S.actionBtn, color: "#16a34a", background: "#dcfce7", border: "1.5px solid #bbfcda" }} onClick={() => handleRestore(item.product_id)}>Restore</button>
+                                )}
+                                {isAdminOrManager && (
+                                  <button style={{ ...S.actionBtn, color: "#ef4444" }} onClick={() => handleDelete(item.product_id, item.name)}>Purge</button>
+                                )}
+                              </>
                             )}
                           </td>
                         </tr>
@@ -570,6 +672,60 @@ function Products() {
             </div>
           </div>
         </div>
+        {/* ── Delete Confirmation Modal ── */}
+        {deleteModal.show && (
+          <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(4px)" }}>
+            <div className="it-fade-up" style={{ background: "#fff", padding: "40px", borderRadius: "32px", width: "450px", boxShadow: "0 20px 50px rgba(0,0,0,0.1)" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 900, marginBottom: "12px" }}>Decommission Asset?</h2>
+              <p style={{ color: "#64748b", fontWeight: "600", marginBottom: "32px", lineHeight: "1.6" }}>
+                 You are about to remove <strong>{deleteModal.name}</strong>. {viewMode === 'active' ? 'Choose the decommissioning method:' : 'This action is irreversible.'}
+               </p>
+               
+               {viewMode === 'active' && (
+                 <div style={{ marginBottom: "24px" }}>
+                   <label style={{ fontSize: "0.8rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
+                     Reason for Removal
+                   </label>
+                   <select 
+                     value={deleteModal.reason}
+                     onChange={(e) => setDeleteModal({ ...deleteModal, reason: e.target.value })}
+                     style={{ ...S.select, width: "100%" }}
+                   >
+                     <option value="Damaged">Damaged / Broken</option>
+                     <option value="Expired">Expired Item</option>
+                     <option value="Sold">Sold / Shipped</option>
+                     <option value="Donated">Donated</option>
+                     <option value="Other">Other Disposal</option>
+                   </select>
+                 </div>
+               )}
+
+               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {viewMode === 'active' && (
+                  <button 
+                    onClick={() => handlePerformDelete('temporary')}
+                    style={{ ...S.btnPrimary, background: "#f1f5f9", color: "#0f172a", border: "1.5px solid #e2e8f0", boxShadow: "none" }}
+                  >
+                    Temporary Delete (Move to Archive)
+                  </button>
+                )}
+                <button 
+                  onClick={() => handlePerformDelete('permanent')}
+                  style={{ ...S.btnPrimary, background: "#fee2e2", color: "#dc2626", border: "1.5px solid #fecaca", boxShadow: "none" }}
+                >
+                  {viewMode === 'active' ? 'Permanent Delete (Purge)' : 'Confirm Permanent Purge'}
+                </button>
+                <button 
+                  onClick={() => setDeleteModal({ show: false, id: null, name: null })}
+                  style={{ background: "transparent", border: "none", color: "#94a3b8", fontWeight: "700", cursor: "pointer", marginTop: "12px" }}
+                >
+                  Cancel Operation
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Footer />
       </main>
     </div>

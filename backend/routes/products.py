@@ -1,14 +1,28 @@
 from flask import Blueprint, request, jsonify
 from models.db import db
 from models.product_model import Product, product_schema, products_schema
-from flask_jwt_extended import jwt_required
+from models.transaction_model import Transaction
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 products_bp = Blueprint('products', __name__)
 
 @products_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_products():
-    products = Product.query.all()
+    include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
+    
+    if include_deleted:
+        products = Product.query.all()
+    else:
+        products = Product.query.filter_by(is_deleted=False).all()
+        
+    return jsonify(products_schema.dump(products)), 200
+
+@products_bp.route('/archived', methods=['GET'])
+@jwt_required()
+def get_archived_products():
+    """Returns only soft-deleted products"""
+    products = Product.query.filter_by(is_deleted=True).all()
     return jsonify(products_schema.dump(products)), 200
 
 @products_bp.route('/<string:product_id>', methods=['GET'])
@@ -34,7 +48,8 @@ def add_product():
         category=data.get('category'),
         price=data.get('price'),
         total=data.get('total', 0),
-        current=data.get('current', 0)
+        current=data.get('current', 0),
+        is_deleted=False
     )
     
     db.session.add(new_product)
@@ -60,6 +75,30 @@ def update_product(product_id):
     db.session.commit()
     return jsonify(product_schema.dump(product)), 200
 
+@products_bp.route('/<string:product_id>/restore', methods=['POST'])
+@jwt_required()
+def restore_product(product_id):
+    """Admin/Manager route to bring back a temporarily deleted item"""
+    product = Product.query.filter_by(product_id=product_id).first()
+    if not product:
+        return jsonify({"message": "Asset blueprint not found"}), 404
+    
+    # Log restoration
+    user_id = get_jwt_identity()
+    restore_txn = Transaction(
+        product_id=product.id,
+        user_id=user_id,
+        quantity=product.current, # Re-adding the stock back to active reporting
+        transaction_type='RESTORE',
+        notes=f"Asset restored from Archive."
+    )
+    db.session.add(restore_txn)
+    
+    product.is_deleted = False
+    product.disposal_reason = None
+    db.session.commit()
+    return jsonify({"message": f"Asset '{product.name}' has been restored to active inventory"}), 200
+
 @products_bp.route('/<string:product_id>', methods=['DELETE'])
 @jwt_required()
 def delete_product(product_id):
@@ -67,6 +106,27 @@ def delete_product(product_id):
     if not product:
         return jsonify({"message": "Product not found"}), 404
         
-    db.session.delete(product)
-    db.session.commit()
-    return jsonify({"message": "Product deleted"}), 200
+    mode = request.args.get('mode', 'temporary') # 'temporary' or 'permanent'
+    data = request.get_json() or {}
+    reason = data.get('reason', 'Not Specified')
+    
+    if mode == 'permanent':
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({"message": f"Asset '{product.name}' has been permanently purged from system"}), 200
+    else:
+        # Log this disposal as a transaction for financial reporting
+        user_id = get_jwt_identity()
+        disposal_txn = Transaction(
+            product_id=product.id,
+            user_id=user_id,
+            quantity=-product.current, # Removing all current stock
+            transaction_type='DISPOSAL',
+            notes=f"Asset decommissioned. Reason: {reason}"
+        )
+        db.session.add(disposal_txn)
+
+        product.is_deleted = True
+        product.disposal_reason = reason
+        db.session.commit()
+        return jsonify({"message": f"Asset '{product.name}' has been moved to Archive (Reason: {reason})"}), 200

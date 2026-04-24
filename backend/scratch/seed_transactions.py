@@ -8,7 +8,7 @@ def seed_transactions():
     print("🚀 Seeding transactions...")
     
     # 1. Login to get token
-    login_data = {"email": "admin@inventrack.com", "password": "password123"}
+    login_data = {"email": "admin@inventrack.com", "password": "admin123"}
     login_res = requests.post(f"{BASE_URL}/auth/login", json=login_data)
     if login_res.status_code != 200:
         print("❌ Login failed. Make sure server is running and seeds are populated.")
@@ -37,7 +37,7 @@ def seed_transactions():
 
         payload = {
             "product_id": product['id'],
-            "type": action,
+            "transaction_type": action,
             "quantity": qty,
             "notes": f"Seeded {action} for {product['name']}",
             "timestamp": timestamp

@@ -12,6 +12,8 @@ class Product(db.Model):
     total = db.Column(db.Integer, default=0)
     current = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_deleted = db.Column(db.Boolean, default=False)
+    disposal_reason = db.Column(db.String(100), nullable=True) # e.g. "Damaged", "Expired"
 
 class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
