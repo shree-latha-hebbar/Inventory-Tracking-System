@@ -71,6 +71,8 @@ function Orders() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [newOrder, setNewOrder] = useState({ supplier: "", product_id: "", quantity: "" });
 
   const role = (localStorage.getItem("role") || "Staff").toLowerCase();
@@ -115,15 +117,20 @@ function Orders() {
     }
   };
 
-  const handleReceive = async (orderId) => {
+  const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`http://127.0.0.1:5000/api/orders/${orderId}`, { status: "Received" }, {
+      await axios.put(`http://127.0.0.1:5000/api/orders/${orderId}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
     } catch (err) {
-      alert("Failed to update status");
+      alert(`Failed to update status to ${newStatus}`);
     }
+  };
+
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setIsDetailsOpen(true);
   };
 
   const handleMenuClick = (menu) => {
@@ -140,12 +147,73 @@ function Orders() {
     }
   };
 
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "Pending":
+        return { background: "#fef9c3", color: "#a16207" }; // Yellow
+      case "Approved":
+        return { background: "#dcfce7", color: "#166534" }; // Light Green
+      case "Received":
+        return { background: "#10b98120", color: "#059669" }; // Darker Green
+      default:
+        return { background: "#f1f5f9", color: "#475569" };
+    }
+  };
+
   return (
     <div style={S.root}>
       <Sidebar role={role} activeItem="Stock Orders" onMenuClick={handleMenuClick} onLogout={() => { localStorage.clear(); navigate("/"); }} />
       
       <main style={S.main}>
         <Navbar role={role} />
+
+        {/* ── Order Details Drawer ── */}
+        {isDetailsOpen && selectedOrder && (
+          <div style={{ position: "fixed", top: 0, right: 0, width: "100%", height: "100%", zIndex: 2000, display: "flex" }}>
+            <div style={{ flex: 1, background: "rgba(15, 23, 42, 0.3)", backdropFilter: "blur(8px)" }} onClick={() => setIsDetailsOpen(false)} />
+            <div className="it-slide-in" style={{ width: "500px", background: "#fff", height: "100%", padding: "48px", boxShadow: "-20px 0 60px rgba(0,0,0,0.1)", overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+                <h2 style={{ fontWeight: 950, fontSize: "1.8rem" }}>Order Details</h2>
+                <button onClick={() => setIsDetailsOpen(false)} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#94a3b8" }}>✕</button>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                <div style={{ padding: "24px", background: "#f8fafc", borderRadius: "20px", border: "1.5px solid #e2e8f0" }}>
+                   <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>Status</p>
+                   <span style={{ ...S.badge, ...getStatusStyle(selectedOrder.status), fontSize: "0.9rem", padding: "8px 16px" }}>{selectedOrder.status}</span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                  <div>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "4px" }}>Order ID</p>
+                    <p style={{ fontWeight: 800, color: "#1e293b" }}>{selectedOrder.order_id}</p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "4px" }}>Date</p>
+                    <p style={{ fontWeight: 800, color: "#1e293b" }}>{selectedOrder.date}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", marginBottom: "4px" }}>Supplier</p>
+                  <p style={{ fontWeight: 800, fontSize: "1.1rem", color: "#1e293b" }}>{selectedOrder.supplier}</p>
+                </div>
+
+                <div style={{ padding: "24px", background: "#f0f9ff", borderRadius: "20px", border: "1.5px solid #bae6fd" }}>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", marginBottom: "12px" }}>Asset Details</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <p style={{ fontWeight: 800, color: "#0c4a6e" }}>{selectedOrder.product_name}</p>
+                    <p style={{ fontWeight: 900, color: "#0369a1" }}>{selectedOrder.quantity} Units</p>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "auto", borderTop: "1.5px solid #f1f5f9", paddingTop: "32px" }}>
+                   <button onClick={() => setIsDetailsOpen(false)} style={{ ...S.btnPrimary, width: "100%", background: "#0f172a" }}>CLOSE VIEW</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Create Order Drawer ── */}
         {isDrawerOpen && (
@@ -223,13 +291,19 @@ function Orders() {
                       <td style={S.td}>{order.quantity} Units</td>
                       <td style={{ ...S.td, color: "#94a3b8" }}>{order.date}</td>
                       <td style={S.td}>
-                        <span style={{ ...S.badge, background: order.status === "Pending" ? "#fef9c3" : "#dcfce7", color: order.status === "Pending" ? "#a16207" : "#166534" }}>
+                        <span style={{ ...S.badge, ...getStatusStyle(order.status) }}>
                           {order.status}
                         </span>
                       </td>
                       <td style={S.td}>
                         {order.status === "Pending" && (
-                          <button style={S.actionBtn} onClick={() => handleReceive(order.id)}>Mark Received</button>
+                          <button style={S.actionBtn} onClick={() => handleUpdateStatus(order.id, "Approved")}>Approve</button>
+                        )}
+                        {order.status === "Approved" && (
+                          <button style={{ ...S.actionBtn, borderColor: "#1d4ed8", color: "#1d4ed8" }} onClick={() => handleUpdateStatus(order.id, "Received")}>Mark Received</button>
+                        )}
+                        {order.status === "Received" && (
+                          <button style={{ ...S.actionBtn, background: "#f8fafc" }} onClick={() => handleViewDetails(order)}>View Details</button>
                         )}
                       </td>
                     </tr>
