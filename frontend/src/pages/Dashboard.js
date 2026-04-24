@@ -381,19 +381,25 @@ function Dashboard() {
     // 🔄 Force a data refresh every time a menu item is clicked
     setRefreshToggle(prev => prev + 1);
 
-    if (m === "Inventory Reports") {
-      navigate("/reports");
-      return;
-    }
-    setActiveItem(m);
-    if (m.toLowerCase().includes("product") || m.toLowerCase().includes("asset")) {
+    if (m === "Manage Products" || m === "Product Search") {
       navigate("/products");
     }
-    if (m.toLowerCase().includes("report")) {
+    if (m === "Stock Orders") {
+      navigate("/orders");
+    }
+    if (m === "Inventory Reports") {
       navigate("/reports");
     }
-    if (m.toLowerCase().includes("transaction") || m.toLowerCase().includes("history")) {
+    if (m === "Transaction History") {
       navigate("/transactions");
+    }
+    if (m === "Suppliers") {
+      navigate("/dashboard", { state: { activeItem: "Suppliers" } });
+    }
+
+    const dashboardItems = ["Dashboard", "Update Stock", "User Roles", "Audit Logs", "System Config"];
+    if (dashboardItems.includes(m)) {
+      setActiveItem(m);
     }
   };
 
