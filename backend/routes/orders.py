@@ -99,6 +99,25 @@ def update_order(id):
         else:
             print(f"Warning: Product {order.product_id} not found. Stock update skipped.")
 
+    # 🚀 Automatic Email Notification on Manager Approval
+    if new_status == 'Approved' and order.status != 'Approved':
+        from utils.email_service import send_order_approval_notification
+        try:
+            # dispatches to both manager and supplier
+            send_order_approval_notification(order)
+            print(f"EMAIL-SERVICE: Approval notification sent for {order.order_id}")
+        except Exception as e:
+            print(f"EMAIL-SERVICE: Failed to send approval email: {e}")
+
+    # 📦 Automatic Delivery Confirmation to Supplier
+    if new_status == 'Received' and order.status != 'Received':
+        from utils.email_service import send_delivery_confirmation
+        try:
+            send_delivery_confirmation(order)
+            print(f"EMAIL-SERVICE: Delivery confirmation sent for {order.order_id}")
+        except Exception as e:
+            print(f"EMAIL-SERVICE: Failed to send delivery email: {e}")
+
     order.supplier = data.get('supplier', order.supplier)
     order.date = data.get('date', order.date)
     order.quantity = data.get('quantity', order.quantity)

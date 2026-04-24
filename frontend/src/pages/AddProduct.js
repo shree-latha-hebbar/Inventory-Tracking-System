@@ -152,7 +152,7 @@ function AddProduct() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      navigate("/products", { state: { toast: "📦 Asset registered successfully!" } });
+      navigate("/products");
     } catch (err) {
       console.error("Failed to add product:", err);
       setError(err.response?.data?.message || "Failed to add product. Please try again.");

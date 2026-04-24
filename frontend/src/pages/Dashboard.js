@@ -349,6 +349,19 @@ function Dashboard() {
     navigate("/");
   };
 
+  const handleSendTestEmail = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await axios.post("http://127.0.0.1:5000/api/notifications/test-email", {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ show: true, message: res.data.message, type: "success" });
+    } catch (err) {
+      const msg = err.response?.data?.message || "Email dispatch failed.";
+      setToast({ show: true, message: msg, type: "error" });
+    }
+  };
+
   const roleConfigs = {
     admin: {
       color: "#6366f1",
@@ -790,6 +803,21 @@ function Dashboard() {
               <span style={{ fontWeight: 700, fontSize: "0.9rem", color: i === 0 ? "#1e40af" : "#64748b" }}>{m}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div style={S.activitySection}>
+        <div style={S.sectionHeading}>📬 Communication Bridge</div>
+        <div style={{ background: "#f8fafc", padding: "24px", borderRadius: "20px", border: "1.5px solid #e2e8f0" }}>
+           <p style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b", marginBottom: "12px", textTransform: "uppercase" }}>SMTP Status: Connected</p>
+           <p style={{ fontSize: "0.9rem", color: "#0f172a", fontWeight: "600", marginBottom: "20px" }}>Verify your email service by sending a system handshake to the registered administrator email.</p>
+           <button 
+             onClick={handleSendTestEmail}
+             style={{ ...S.btnPrimary, width: "100%", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
+           >
+             <span>Dispatch Test Email</span>
+             <span>→</span>
+           </button>
         </div>
       </div>
     </div>
