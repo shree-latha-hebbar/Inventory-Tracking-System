@@ -334,21 +334,6 @@ function Dashboard() {
     };
 
     fetchData();
-
-    /* Inject Design Assets */
-    if (!document.getElementById("it-fonts")) {
-      const style = document.createElement("style");
-      style.id = "it-fonts";
-      style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
-        @keyframes itFadeUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .it-fade-up { animation: itFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      `;
-      document.head.appendChild(style);
-    }
   }, [navigate, activeItem, refreshToggle]);
 
   const handleLogout = () => {
@@ -381,19 +366,25 @@ function Dashboard() {
     // 🔄 Force a data refresh every time a menu item is clicked
     setRefreshToggle(prev => prev + 1);
 
-    if (m === "Inventory Reports") {
-      navigate("/reports");
-      return;
-    }
-    setActiveItem(m);
-    if (m.toLowerCase().includes("product") || m.toLowerCase().includes("asset")) {
+    if (m === "Manage Products" || m === "Product Search") {
       navigate("/products");
     }
-    if (m.toLowerCase().includes("report")) {
+    if (m === "Stock Orders") {
+      navigate("/orders");
+    }
+    if (m === "Inventory Reports") {
       navigate("/reports");
     }
-    if (m.toLowerCase().includes("transaction") || m.toLowerCase().includes("history")) {
+    if (m === "Transaction History") {
       navigate("/transactions");
+    }
+    if (m === "Suppliers") {
+      navigate("/dashboard", { state: { activeItem: "Suppliers" } });
+    }
+
+    const dashboardItems = ["Dashboard", "Update Stock", "User Roles", "Audit Logs", "System Config"];
+    if (dashboardItems.includes(m)) {
+      setActiveItem(m);
     }
   };
 

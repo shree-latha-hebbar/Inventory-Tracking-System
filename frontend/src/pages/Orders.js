@@ -141,11 +141,12 @@ function Orders() {
     if (menu === "Dashboard") navigate("/dashboard");
     if (menu === "Manage Products" || menu === "Product Search") navigate("/products");
     if (menu === "Stock Orders") navigate("/orders");
-    if (menu === "Inventory Reports" || menu === "Transaction History") navigate("/transactions");
-    if (menu === "Reports") navigate("/reports");
-
+    if (menu === "Inventory Reports") navigate("/reports");
+    if (menu === "Transaction History") navigate("/transactions");
+    if (menu === "Suppliers") navigate("/dashboard", { state: { activeItem: "Suppliers" } });
+    
     // 🛡️ Admin/Manager Navigation back to Dashboard
-    const dashboardItems = ["User Roles", "Audit Logs", "System Config"];
+    const dashboardItems = ["Update Stock", "User Roles", "Audit Logs", "System Config"];
     if (dashboardItems.includes(menu)) {
       navigate("/dashboard", { state: { activeItem: menu } });
     }
