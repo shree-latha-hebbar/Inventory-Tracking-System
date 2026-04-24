@@ -3,8 +3,43 @@ from models.db import db
 from models.notification_model import Notification, notifications_schema, notification_schema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.product_model import Product
+from utils.email_service import send_email
 
 notifications_bp = Blueprint('notifications', __name__)
+
+@notifications_bp.route('/test-email', methods=['POST'])
+@jwt_required()
+def send_test_email():
+    """Admin route to test email configuration from the UI"""
+    success, message = send_email(
+        "InvenTrack: System Connection Test",
+        "Your email service is now successfully connected to the InvenTrack Intelligence System."
+    )
+    if success:
+        return jsonify({"message": "Test email dispatched successfully!"}), 200
+    return jsonify({"message": f"Failed to send email: {message}"}), 500
+
+@notifications_bp.route('/contact', methods=['POST'])
+def handle_contact_form():
+    """Public route for the contact form"""
+    data = request.get_json()
+    name = data.get('fullName')
+    email = data.get('workEmail')
+    message = data.get('message')
+    
+    subject = f"New Contact Request: {name}"
+    body = f"""
+    <h3>New Inquiry from Contact Form</h3>
+    <p><strong>Name:</strong> {name}</p>
+    <p><strong>Email:</strong> {email}</p>
+    <p><strong>Message:</strong></p>
+    <p>{message}</p>
+    """
+    
+    success, err_msg = send_email(subject, body, is_html=True)
+    if success:
+        return jsonify({"message": "Your message has been dispatched to our logistics team."}), 200
+    return jsonify({"message": "System busy. Please try again later."}), 500
 
 @notifications_bp.route('/', methods=['GET'])
 @jwt_required()

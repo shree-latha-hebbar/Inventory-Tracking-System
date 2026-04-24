@@ -359,6 +359,19 @@ function Dashboard() {
     navigate("/");
   };
 
+  const handleSendTestEmail = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await axios.post("http://127.0.0.1:5000/api/notifications/test-email", {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ show: true, message: res.data.message, type: "success" });
+    } catch (err) {
+      const msg = err.response?.data?.message || "Email dispatch failed.";
+      setToast({ show: true, message: msg, type: "error" });
+    }
+  };
+
   const roleConfigs = {
     admin: {
       color: "#6366f1",

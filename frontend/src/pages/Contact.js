@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import logo from '../assets/logo.png';
 
 /* ─── Inline Styles (Sapphire & Slate Design) ─── */
@@ -184,15 +185,21 @@ function Contact() {
     return newErrors;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    setSubmitted(true);
-    setFormData({ fullName: '', workEmail: '', message: '' });
+    
+    try {
+      await axios.post("http://127.0.0.1:5000/api/notifications/contact", formData);
+      setSubmitted(true);
+      setFormData({ fullName: '', workEmail: '', message: '' });
+    } catch (err) {
+      alert("System dispatch failed. Please try again later.");
+    }
   }
 
   return (
