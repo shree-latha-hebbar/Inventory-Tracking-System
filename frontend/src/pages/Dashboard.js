@@ -259,6 +259,7 @@ function Dashboard() {
   const [salesTrend, setSalesTrend] = useState([]);
   const [categoryDist, setCategoryDist] = useState([]);
   const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([]);
@@ -274,6 +275,12 @@ function Dashboard() {
     autoRestock: false
   });
 
+  // 📝 User Role Modal State
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userFormData, setUserFormData] = useState({ username: "", email: "", password: "", role: "Staff" });
+
   useEffect(() => {
     const savedRole = localStorage.getItem("role");
     if (!savedRole) {
@@ -288,7 +295,7 @@ function Dashboard() {
     }
 
     const fetchData = async () => {
-      const viewsNeedingData = ["Dashboard", "Update Stock", "Suppliers", "Stock Orders", "Inventory Reports"];
+      const viewsNeedingData = ["Dashboard", "Update Stock", "Suppliers", "Stock Orders", "Inventory Reports", "User Roles"];
       if (!viewsNeedingData.includes(currentView)) return;
       
       try {
@@ -312,7 +319,7 @@ function Dashboard() {
           }
         };
 
-        const [prodData, orderData, txnData, sumData, velocityData, criticalData, trendData, catData, suppData] = await Promise.all([
+        const [prodData, orderData, txnData, sumData, velocityData, criticalData, trendData, catData, suppData, userData] = await Promise.all([
           fetchWithCatch("http://127.0.0.1:5000/api/products/"),
           fetchWithCatch("http://127.0.0.1:5000/api/orders/"),
           fetchWithCatch("http://127.0.0.1:5000/api/transactions/"),
@@ -321,7 +328,8 @@ function Dashboard() {
           fetchWithCatch("http://127.0.0.1:5000/api/reports/critical-list"),
           fetchWithCatch("http://127.0.0.1:5000/api/reports/sales-trend"),
           fetchWithCatch("http://127.0.0.1:5000/api/reports/category-distribution"),
-          fetchWithCatch("http://127.0.0.1:5000/api/suppliers/")
+          fetchWithCatch("http://127.0.0.1:5000/api/suppliers/"),
+          fetchWithCatch("http://127.0.0.1:5000/api/users/")
         ]);
 
         if (prodData) {
@@ -344,6 +352,7 @@ function Dashboard() {
         if (trendData) setSalesTrend(trendData);
         if (catData) setCategoryDist(catData);
         if (suppData && suppData.length > 0) setSuppliers(suppData);
+        if (userData) setUsers(userData);
       } catch (err) {
         console.error("Dashboard global fetch failed:", err);
       } finally {
@@ -364,6 +373,48 @@ function Dashboard() {
     } catch (err) {
       const msg = err.response?.data?.message || "Email dispatch failed.";
       setToast({ show: true, message: msg, type: "error" });
+    }
+  };
+
+  const handleUpdateUserRole = async (userId, newRole) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.put(`http://127.0.0.1:5000/api/users/${userId}`, { role: newRole }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ show: true, message: "User role updated successfully!", type: "success" });
+      setRefreshToggle(p => p + 1);
+      setIsUserModalOpen(false);
+    } catch (err) {
+      setToast({ show: true, message: "Failed to update role.", type: "error" });
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to revoke all access for this user?")) return;
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`http://127.0.0.1:5000/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setToast({ show: true, message: "User access revoked.", type: "success" });
+      setRefreshToggle(p => p + 1);
+      setIsUserModalOpen(false);
+    } catch (err) {
+      setToast({ show: true, message: "Failed to revoke access.", type: "error" });
+    }
+  };
+
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post("http://127.0.0.1:5000/api/auth/register", userFormData);
+      setToast({ show: true, message: "New employee added successfully!", type: "success" });
+      setIsAddUserModalOpen(false);
+      setUserFormData({ username: "", email: "", password: "", role: "Staff" });
+      setRefreshToggle(p => p + 1);
+    } catch (err) {
+      setToast({ show: true, message: err.response?.data?.message || "Failed to add employee.", type: "error" });
     }
   };
 
@@ -704,7 +755,15 @@ function Dashboard() {
 
   const renderUserRoles = () => (
     <div style={S.activitySection}>
-      <div style={S.sectionHeading}>👥 Team Roles & Permissions</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <div style={S.sectionHeading}>👥 Team Roles & Permissions</div>
+        <button 
+          onClick={() => setIsAddUserModalOpen(true)}
+          style={{ ...S.btnPrimary, background: "#0f172a", display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px" }}
+        >
+          <span>+ Add New Employee</span>
+        </button>
+      </div>
       <table style={S.table}>
         <thead>
           <tr>
@@ -717,38 +776,160 @@ function Dashboard() {
           </tr>
         </thead>
         <tbody>
-          {[
-            { name: "John Doe", email: "john@inventrack.com", role: "Manager", access: "Operations", status: "Active", color: "#2563eb" },
-            { name: "Sarah Smith", email: "sarah@inventrack.com", role: "Admin", access: "Full Control", status: "Active", color: "#6366f1" },
-            { name: "Mike Ross", email: "mike@inventrack.com", role: "Staff", access: "Restricted", status: "Away", color: "#0ea5e9" },
-          ].map((u, i) => (
-            <tr key={i} style={S.tr}>
-              <td style={{ ...S.td, borderRadius: "12px 0 0 12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: u.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem" }}>
-                    {u.name.split(" ").map(n => n[0]).join("")}
+          {users.map((u, i) => {
+            const roleColors = { Admin: "#6366f1", Manager: "#2563eb", Staff: "#0ea5e9" };
+            const roleColor = roleColors[u.role] || "#94a3b8";
+            const accessLevels = { Admin: "Full Control", Manager: "Operations", Staff: "Restricted" };
+            
+            return (
+              <tr key={i} style={S.tr}>
+                <td style={{ ...S.td, borderRadius: "12px 0 0 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: roleColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", fontWeight: "bold" }}>
+                      {u.username.substring(0, 2).toUpperCase()}
+                    </div>
+                    {u.username}
                   </div>
-                  {u.name}
-                </div>
-              </td>
-              <td style={S.td}>{u.email}</td>
-              <td style={S.td}>
-                <span style={{ ...S.badge, background: u.color + "20", color: u.color }}>{u.role}</span>
-              </td>
-              <td style={S.td}>{u.access}</td>
-              <td style={S.td}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: u.status === "Active" ? "#10b981" : "#94a3b8" }} />
-                  {u.status}
-                </div>
-              </td>
-              <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
-                <button style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}>Edit Access</button>
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td style={S.td}>{u.email}</td>
+                <td style={S.td}>
+                  <span style={{ ...S.badge, background: roleColor + "20", color: roleColor }}>{u.role}</span>
+                </td>
+                <td style={S.td}>{accessLevels[u.role] || "Custom"}</td>
+                <td style={S.td}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: u.status === "Active" ? "#10b981" : "#94a3b8" }} />
+                    {u.status || "Active"}
+                  </div>
+                </td>
+                <td style={{ ...S.td, borderRadius: "0 12px 12px 0" }}>
+                  <button 
+                    onClick={() => { setSelectedUser(u); setIsUserModalOpen(true); }}
+                    style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem" }}
+                  >
+                    Edit Access
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+
+      {/* ── Edit Access Modal ── */}
+      {isUserModalOpen && selectedUser && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }}>
+          <div style={{ background: "#fff", padding: "32px", borderRadius: "24px", width: "400px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <h3 style={{ margin: "0 0 8px", fontSize: "1.25rem", fontWeight: 800 }}>Edit System Access</h3>
+            <p style={{ margin: "0 0 24px", color: "#64748b", fontSize: "0.9rem" }}>Modifying permissions for <strong>{selectedUser.username}</strong></p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#475569", marginBottom: "8px", textTransform: "uppercase" }}>Assign New Role</label>
+                <select 
+                  value={selectedUser.role}
+                  onChange={(e) => handleUpdateUserRole(selectedUser.id, e.target.value)}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", fontSize: "0.9rem", fontWeight: 600 }}
+                >
+                  <option value="Admin">Admin (Full Control)</option>
+                  <option value="Manager">Manager (Operations)</option>
+                  <option value="Staff">Staff (Restricted)</option>
+                </select>
+              </div>
+
+              <div style={{ marginTop: "8px" }}>
+                 <button 
+                   onClick={() => handleDeleteUser(selectedUser.id)}
+                   style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #fee2e2", background: "#fef2f2", color: "#ef4444", fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}
+                 >
+                   Revoke All Access
+                 </button>
+              </div>
+
+              <button 
+                onClick={() => setIsUserModalOpen(false)}
+                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "none", background: "#f1f5f9", color: "#475569", fontWeight: 700, cursor: "pointer", marginTop: "8px" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Employee Modal ── */}
+      {isAddUserModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }}>
+          <div style={{ background: "#fff", padding: "32px", borderRadius: "24px", width: "450px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <h3 style={{ margin: "0 0 8px", fontSize: "1.25rem", fontWeight: 800 }}>Onboard New Employee</h3>
+            <p style={{ margin: "0 0 24px", color: "#64748b", fontSize: "0.9rem" }}>Create a new account and assign their initial access level.</p>
+            
+            <form onSubmit={handleAddEmployee} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#475569", marginBottom: "8px", textTransform: "uppercase" }}>Username</label>
+                <input 
+                  required
+                  type="text"
+                  placeholder="e.g. jsmith"
+                  value={userFormData.username}
+                  onChange={(e) => setUserFormData({...userFormData, username: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", fontSize: "0.9rem" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#475569", marginBottom: "8px", textTransform: "uppercase" }}>Work Email</label>
+                <input 
+                  required
+                  type="email"
+                  placeholder="e.g. jane@inventrack.com"
+                  value={userFormData.email}
+                  onChange={(e) => setUserFormData({...userFormData, email: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", fontSize: "0.9rem" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#475569", marginBottom: "8px", textTransform: "uppercase" }}>Temporary Password</label>
+                <input 
+                  required
+                  type="password"
+                  placeholder="••••••••"
+                  value={userFormData.password}
+                  onChange={(e) => setUserFormData({...userFormData, password: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", fontSize: "0.9rem" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 800, color: "#475569", marginBottom: "8px", textTransform: "uppercase" }}>Access Role</label>
+                <select 
+                  value={userFormData.role}
+                  onChange={(e) => setUserFormData({...userFormData, role: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", fontSize: "0.9rem", fontWeight: 600 }}
+                >
+                  <option value="Staff">Staff (Restricted Access)</option>
+                  <option value="Manager">Manager (Operational Access)</option>
+                  <option value="Admin">Admin (Full System Control)</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                <button 
+                  type="button"
+                  onClick={() => setIsAddUserModalOpen(false)}
+                  style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "none", background: "#f1f5f9", color: "#475569", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  style={{ flex: 2, padding: "14px", borderRadius: "12px", border: "none", background: "#0f172a", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Create Account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 
