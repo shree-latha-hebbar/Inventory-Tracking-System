@@ -354,11 +354,6 @@ function Dashboard() {
     fetchData();
   }, [navigate, location, refreshToggle]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("role");
-    navigate("/");
-  };
-
   const handleSendTestEmail = async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -370,6 +365,11 @@ function Dashboard() {
       const msg = err.response?.data?.message || "Email dispatch failed.";
       setToast({ show: true, message: msg, type: "error" });
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("role");
+    navigate("/");
   };
 
   const roleConfigs = {
@@ -890,6 +890,21 @@ function Dashboard() {
                 <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b" }}>Database</span>
                 <span style={{ fontSize: "0.85rem", fontWeight: "900", color: "#10b981" }}>CONNECTED</span>
               </div>
+            </div>
+          </div>
+          {/* 📬 Communication Bridge */}
+          <div style={S.standardCard("#0f172a")}>
+            <div style={S.sectionHeading}>📬 Communication Bridge</div>
+            <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "16px", border: "1.5px solid #e2e8f0" }}>
+               <p style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", marginBottom: "8px", textTransform: "uppercase" }}>SMTP Status: Connected</p>
+               <p style={{ fontSize: "0.82rem", color: "#475569", fontWeight: "600", marginBottom: "16px" }}>Verify your email service by sending a system handshake.</p>
+               <button 
+                 onClick={handleSendTestEmail}
+                 style={{ ...S.btnPrimary, width: "100%", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", padding: "10px" }}
+               >
+                 <span>Dispatch Test Email</span>
+                 <span>→</span>
+               </button>
             </div>
           </div>
 
