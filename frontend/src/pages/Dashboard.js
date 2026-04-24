@@ -228,6 +228,14 @@ const SapphireDonut = ({ data, centerValue }) => {
   );
 };
 
+const INITIAL_SUPPLIERS = [
+  { id: 1, name: "Global Tech Inc.", category: "Hardware & Silicates", contact_email: "support@globaltech.com", lead_time: "12 Days", performance_rating: 4.8 },
+  { id: 2, name: "Steelcase Mfg.", category: "Premium Furniture", contact_email: "logistics@steelcase.com", lead_time: "24 Days", performance_rating: 4.5 },
+  { id: 3, name: "LG Display Hub", category: "Monitors & Panels", contact_email: "hub@lgdisplay.com", lead_time: "08 Days", performance_rating: 4.9 },
+  { id: 4, name: "Logitech Logistics", category: "Peripherals", contact_email: "b2b@logitech.com", lead_time: "05 Days", performance_rating: 4.7 },
+  { id: 5, name: "Nvidia Foundry", category: "GPUs & Processing", contact_email: "foundry@nvidia.com", lead_time: "15 Days", performance_rating: 4.9 }
+];
+
 function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -249,29 +257,27 @@ function Dashboard() {
   const [criticalList, setCriticalList] = useState([]);
   const [salesTrend, setSalesTrend] = useState([]);
   const [categoryDist, setCategoryDist] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
+  const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([]);
 
   useEffect(() => {
-    // 🛡️ Role Guard
     const savedRole = localStorage.getItem("role");
     if (!savedRole) {
       navigate("/");
-    } else {
-      setRole(savedRole);
+      return;
     }
+    setRole(savedRole);
 
-    // 🚀 Handle navigation state from other pages
-    if (location.state?.activeItem) {
-      setActiveItem(location.state.activeItem);
+    const currentView = location.state?.activeItem || "Dashboard";
+    if (currentView !== activeItem) {
+      setActiveItem(currentView);
     }
 
     const fetchData = async () => {
-      // 🚀 Allow fetching if we are on Dashboard or Update Stock
-      const viewsNeedingData = ["Dashboard", "Update Stock"];
-      if (!viewsNeedingData.includes(activeItem)) return;
+      const viewsNeedingData = ["Dashboard", "Update Stock", "Suppliers", "Stock Orders", "Inventory Reports"];
+      if (!viewsNeedingData.includes(currentView)) return;
       
       try {
         setLoading(true);
@@ -325,7 +331,7 @@ function Dashboard() {
         if (criticalData) setCriticalList(criticalData);
         if (trendData) setSalesTrend(trendData);
         if (catData) setCategoryDist(catData);
-        if (suppData) setSuppliers(suppData);
+        if (suppData && suppData.length > 0) setSuppliers(suppData);
       } catch (err) {
         console.error("Dashboard global fetch failed:", err);
       } finally {
@@ -334,7 +340,7 @@ function Dashboard() {
     };
 
     fetchData();
-  }, [navigate, activeItem, refreshToggle]);
+  }, [navigate, location, refreshToggle]);
 
   const handleLogout = () => {
     localStorage.removeItem("role");
@@ -363,9 +369,6 @@ function Dashboard() {
   };
 
   const handleMenuClick = (m) => {
-    // 🔄 Force a data refresh every time a menu item is clicked
-    setRefreshToggle(prev => prev + 1);
-
     if (m === "Manage Products" || m === "Product Search") {
       navigate("/products");
     }
@@ -378,13 +381,15 @@ function Dashboard() {
     if (m === "Transaction History") {
       navigate("/transactions");
     }
+
+    if (m === "Dashboard" || m === "Update Stock") {
+      navigate("/dashboard", { state: { activeItem: m } });
+    }
     if (m === "Suppliers") {
       navigate("/dashboard", { state: { activeItem: "Suppliers" } });
     }
-
-    const dashboardItems = ["Dashboard", "Update Stock", "User Roles", "Audit Logs", "System Config"];
-    if (dashboardItems.includes(m)) {
-      setActiveItem(m);
+    if (m === "User Roles" || m === "Audit Logs" || m === "System Config") {
+      navigate("/dashboard", { state: { activeItem: m } });
     }
   };
 
