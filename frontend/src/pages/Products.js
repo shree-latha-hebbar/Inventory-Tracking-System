@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useNotification } from "../context/NotificationContext";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -203,6 +204,7 @@ const INITIAL_PRODUCTS = [
 function Products() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showNotification } = useNotification();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   
@@ -266,8 +268,9 @@ function Products() {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchProducts();
+        showNotification(`Asset "${name}" has been permanently removed.`);
       } catch (err) {
-        alert("Delete failed. Unauthorized or Network Error.");
+        showNotification("Delete failed. Unauthorized or Network Error.", "error");
       }
     }
   };
@@ -282,8 +285,9 @@ function Products() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         fetchProducts();
+        showNotification("Stock count updated successfully.");
       } catch (err) {
-        alert("Update failed. Unauthorized or Network Error.");
+        showNotification("Update failed. Unauthorized or Network Error.", "error");
       }
     }
   };

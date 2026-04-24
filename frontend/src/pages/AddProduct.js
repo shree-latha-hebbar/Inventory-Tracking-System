@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../context/NotificationContext";
 import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -96,6 +97,7 @@ const S = {
 
 function AddProduct() {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -145,6 +147,7 @@ function AddProduct() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      showNotification(`Product ${form.name} added successfully!`);
       navigate("/products");
     } catch (err) {
       console.error("Failed to add product:", err);

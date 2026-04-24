@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useNotification } from "../context/NotificationContext";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -67,6 +68,7 @@ const S = {
 function Orders() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showNotification } = useNotification();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
@@ -110,10 +112,11 @@ function Orders() {
       });
       setIsDrawerOpen(false);
       fetchData();
+      showNotification(`Order for ${newOrder.supplier} placed successfully!`);
     } catch (err) {
       console.error("Order creation failed:", err);
       const msg = err.response?.data?.message || "Failed to create order";
-      alert(msg);
+      showNotification(msg, "error");
     }
   };
 
@@ -123,8 +126,9 @@ function Orders() {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
+      showNotification(`Order status updated to ${newStatus}`);
     } catch (err) {
-      alert(`Failed to update status to ${newStatus}`);
+      showNotification(`Failed to update status to ${newStatus}`, "error");
     }
   };
 

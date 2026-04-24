@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import { useNotification } from "../context/NotificationContext";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -109,6 +110,7 @@ const S = {
 function EditProduct() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { showNotification } = useNotification();
   
   const [form, setForm] = useState({
     name: "",
@@ -197,6 +199,7 @@ function EditProduct() {
       await axios.put(`http://127.0.0.1:5000/api/products/${id}`, productData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      showNotification(`Asset ${form.name} updated successfully!`);
       navigate("/products");
     } catch (err) {
       console.error("Save failed", err);

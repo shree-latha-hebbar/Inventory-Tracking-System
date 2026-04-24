@@ -11,12 +11,13 @@ import AboutUs from "./pages/AboutUs";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
 import Orders from "./pages/Orders";
-import Contact from "./pages/Contact";
+import { NotificationProvider } from "./context/NotificationContext";
 
 function App() {
     return (
-        <div className="min-h-screen bg-slate-50">
-            <Routes>
+        <NotificationProvider>
+            <div className="min-h-screen bg-slate-50">
+                <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
@@ -35,6 +36,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </div>
+    </NotificationProvider>
     );
 }
 
