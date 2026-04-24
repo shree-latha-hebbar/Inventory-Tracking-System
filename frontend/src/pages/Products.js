@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useNotification } from "../context/NotificationContext";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Toast from "../components/Toast";
 
 /* ─── Inline Styles ─────────────────────────────────────── */
 const S = {
@@ -204,7 +204,6 @@ const INITIAL_PRODUCTS = [
 function Products() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { showNotification } = useNotification();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   
@@ -215,12 +214,42 @@ function Products() {
   
   const [role, setRole] = useState("staff");
   const [viewingAsset, setViewingAsset] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   useEffect(() => {
     const savedRole = localStorage.getItem("role") || "staff";
     setRole(savedRole);
     fetchProducts();
-  }, []);
+
+    // 🚀 Handle toast from redirect (e.g. from AddProduct)
+    if (location.state?.toast) {
+      setToast({ show: true, message: location.state.toast, type: "success" });
+      // We clear the state in a small timeout to ensure the toast has time to mount
+      setTimeout(() => {
+        window.history.replaceState({}, document.title);
+      }, 100);
+    }
+
+    // 🚀 Global Style Injection
+    if (!document.getElementById("it-fonts")) {
+      const style = document.createElement("style");
+      style.id = "it-fonts";
+      style.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
+        @keyframes itFadeUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes itSlideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .it-fade-up { animation: itFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .it-slide-in { animation: itSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      `;
+      document.head.appendChild(style);
+    }
+  }, [location.state]);
 
   const fetchProducts = async () => {
     try {
@@ -239,6 +268,7 @@ function Products() {
     }
   };
 
+
   const isStaff = role.toLowerCase() === "staff";
   const isAdminOrManager = role.toLowerCase() === "admin" || role.toLowerCase() === "manager";
 
@@ -250,9 +280,8 @@ function Products() {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchProducts();
-        showNotification(`Asset "${name}" has been permanently removed.`);
       } catch (err) {
-        showNotification("Delete failed. Unauthorized or Network Error.", "error");
+        alert("Delete failed. Unauthorized or Network Error.");
       }
     }
   };
@@ -267,9 +296,9 @@ function Products() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         fetchProducts();
-        showNotification("Stock count updated successfully.");
+        setToast({ show: true, message: "📦 Stock updated successfully!", type: "success" });
       } catch (err) {
-        showNotification("Update failed. Unauthorized or Network Error.", "error");
+        alert("Update failed. Unauthorized or Network Error.");
       }
     }
   };
@@ -298,12 +327,11 @@ function Products() {
     if (menu === "Dashboard") navigate("/dashboard");
     if (menu === "Manage Products" || menu === "Product Search") navigate("/products");
     if (menu === "Stock Orders") navigate("/orders");
-    if (menu === "Inventory Reports") navigate("/reports");
-    if (menu === "Transaction History") navigate("/transactions");
-    if (menu === "Suppliers") navigate("/dashboard", { state: { activeItem: "Suppliers" } });
+    if (menu === "Inventory Reports" || menu === "Transaction History") navigate("/transactions");
+    if (menu === "Reports") navigate("/reports");
 
     // 🛡️ Admin/Manager Navigation back to Dashboard
-    const dashboardItems = ["Update Stock", "User Roles", "Audit Logs", "System Config"];
+    const dashboardItems = ["User Roles", "Audit Logs", "System Config"];
     if (dashboardItems.includes(menu)) {
       navigate("/dashboard", { state: { activeItem: menu } });
     }
@@ -326,6 +354,14 @@ function Products() {
 
       <main style={S.main}>
         <Navbar role={role} />
+
+        {toast.show && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast({ ...toast, show: false })} 
+          />
+        )}
 
         {/* ── Asset Deep Dive Drawer ── */}
         {viewingAsset && (
