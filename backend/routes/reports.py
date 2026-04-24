@@ -120,6 +120,7 @@ def get_critical_list():
     results = []
     for p in critical_products:
         results.append({
+            "id": p.id,
             "name": p.name,
             "sku": p.product_id,
             "qty": p.current,

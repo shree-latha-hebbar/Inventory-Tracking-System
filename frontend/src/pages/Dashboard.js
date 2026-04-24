@@ -517,7 +517,7 @@ function Dashboard() {
                     <div style={{ textAlign: "right" }}>
                       <p style={{ fontSize: "0.82rem", fontWeight: 950, color: "#ef4444", margin: 0 }}>{row.qty} LEFT</p>
                       <button 
-                        onClick={() => navigate("/orders", { state: { preSelectedProduct: row.sku } })}
+                        onClick={() => navigate("/orders", { state: { preSelectedProduct: row.id } })}
                         style={{ background: "none", border: "none", padding: 0, color: "#dc2626", fontSize: "0.75rem", fontWeight: "900", textDecoration: "underline", cursor: "pointer", marginTop: "4px" }}
                       >
                         ORDER NOW
