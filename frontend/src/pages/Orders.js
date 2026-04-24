@@ -111,7 +111,7 @@ function Orders() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsDrawerOpen(false);
-      setToast({ show: true, message: "✅ Order placed successfully!", type: "success" });
+      setToast({ show: true, message: "Order placed successfully!", type: "success" });
       fetchData();
     } catch (err) {
       console.error("Order creation failed:", err);
@@ -126,9 +126,9 @@ function Orders() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (newStatus === "Received") {
-        setToast({ show: true, message: "📦 Stock updated successfully!", type: "success" });
+        setToast({ show: true, message: "Stock updated successfully!", type: "success" });
       } else {
-        setToast({ show: true, message: `✅ Order status updated to ${newStatus}!`, type: "success" });
+        setToast({ show: true, message: `Order status updated to ${newStatus}!`, type: "success" });
       }
       fetchData();
     } catch (err) {

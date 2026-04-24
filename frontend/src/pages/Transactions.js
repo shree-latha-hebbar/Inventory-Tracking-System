@@ -4,6 +4,7 @@ import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Toast from "../components/Toast";
 
 /* ─── Inline Styles (Sapphire & Slate Design System) ─────── */
 const S = {
@@ -103,6 +104,7 @@ function Transactions() {
     quantity: 1,
     notes: ""
   });
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   
   useEffect(() => {
     fetchTransactions();
@@ -146,6 +148,7 @@ function Transactions() {
       });
 
       setIsDrawerOpen(false);
+      setToast({ show: true, message: "Transaction logged successfully!", type: "success" });
       fetchTransactions();
     } catch (err) {
       console.error("Log transaction failed:", err);
@@ -185,6 +188,14 @@ function Transactions() {
 
       <main style={S.main}>
         <Navbar role={role} />
+
+        {toast.show && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast({ ...toast, show: false })} 
+          />
+        )}
 
         {/* ── Add Transaction Drawer ── */}
         {isDrawerOpen && (
@@ -311,15 +322,20 @@ function Transactions() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((item) => {
-                      const isIncoming = item.transaction_type === "IN" || item.transaction_type === "RESTOCK";
-                      return (
-                        <tr key={item.id} style={S.tr} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                          <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>TXN-{item.id.toString().padStart(3, '0')}</td>
-                          <td style={S.td}>
-                            <div style={{ fontWeight: 800, color: "#1e293b" }}>{item.product_name}</div>
-                            <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>By: {item.user_name}</div>
-                          </td>
+                        {transactions.map((item) => {
+                          const isIncoming = item.transaction_type === "IN" || item.transaction_type === "RESTOCK" || item.transaction_type === "RESTOCK";
+                          const product = products.find(p => p.id === item.product_id);
+                          const productName = product ? product.name : (item.product?.name || `Product #${item.product_id}`);
+                          
+                          return (
+                            <tr key={item.id} style={S.tr} onMouseEnter={(e) => { e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                              <td style={{ ...S.td, color: "#2563eb", fontWeight: "800" }}>TXN-{item.id.toString().padStart(3, '0')}</td>
+                              <td style={S.td}>
+                                <div style={{ fontWeight: 800, color: "#1e293b" }}>{productName}</div>
+                                <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>
+                                  ID: {product?.product_id || `#${item.product_id}`}
+                                </div>
+                              </td>
                           <td style={S.td}>
                             <span style={{ 
                               ...S.statusBadge, 

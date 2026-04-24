@@ -154,7 +154,8 @@ function EditProduct() {
       });
     } catch (err) {
       console.error("Load failed", err);
-      setError("Failed to load asset blueprint from vault.");
+      const msg = err.response?.data?.message || "Failed to load asset blueprint from vault.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -207,7 +208,8 @@ function EditProduct() {
       navigate("/products");
     } catch (err) {
       console.error("Save failed", err);
-      setError("Synchronization failed. Check network or authority.");
+      const msg = err.response?.data?.message || "Synchronization failed. Check network or authority.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -250,14 +252,26 @@ function EditProduct() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
                 <div>
                   <label style={S.label}>Category</label>
-                  <input
-                    style={S.input}
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    placeholder="Hardware"
-                    required
-                  />
+                  <div style={{ position: "relative" }}>
+                    <select
+                      style={{ ...S.input, appearance: "none" }}
+                      name="category"
+                      value={form.category}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select Category</option>
+                      <option value="Hardware">Hardware</option>
+                      <option value="Laptops">Laptops</option>
+                      <option value="Monitor">Monitors</option>
+                      <option value="Peripheral">Peripherals</option>
+                      <option value="Electronics">Electronics</option>
+                      <option value="Furniture">Furniture</option>
+                      <option value="Stationery">Stationery</option>
+                      <option value="Office Supplies">Office Supplies</option>
+                    </select>
+                    <div style={{ position: "absolute", right: "16px", top: "16px", pointerEvents: "none", fontSize: "0.8rem", color: "#94a3b8" }}>▼</div>
+                  </div>
                 </div>
                 <div>
                   <label style={S.label}>Unit Price ($)</label>

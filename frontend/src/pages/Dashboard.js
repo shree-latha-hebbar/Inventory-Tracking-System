@@ -264,6 +264,16 @@ function Dashboard() {
   const [stockItems, setStockItems] = useState([]);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
+  // ⚙️ System Configuration State
+  const [config, setConfig] = useState({
+    lowStockAlert: true,
+    dailySummary: true,
+    emailNotif: false,
+    threshold: 5,
+    category: "Hardware",
+    autoRestock: false
+  });
+
   useEffect(() => {
     const savedRole = localStorage.getItem("role");
     if (!savedRole) {
@@ -756,44 +766,133 @@ function Dashboard() {
     </div>
   );
 
-  const renderSystemConfig = () => (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-      <div style={S.activitySection}>
-        <div style={S.sectionHeading}>🔔 Notifications</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {[
-            { label: "Low Stock Emails", desc: "Alert managers when assets hit threshold", active: true },
-            { label: "Daily Operations Digest", desc: "Summary of activities at 8:00 AM", active: true },
-            { label: "Audit Log Alerts", desc: "Notify on critical system changes", active: false },
-          ].map((t, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <p style={{ fontWeight: 800, fontSize: "0.92rem" }}>{t.label}</p>
-                <p style={{ fontSize: "0.8rem", color: "#64748b" }}>{t.desc}</p>
-              </div>
-              <div style={{ width: "44px", height: "24px", borderRadius: "12px", background: t.active ? "#2563eb" : "#cbd5e1", position: "relative", cursor: "pointer" }}>
-                <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#fff", position: "absolute", top: "3px", left: t.active ? "23px" : "3px", transition: "all .2s" }} />
-              </div>
-            </div>
-          ))}
+  const renderSystemConfig = () => {
+    const handleToggle = (key) => setConfig({ ...config, [key]: !config[key] });
+    
+    const SettingToggle = ({ label, desc, active, onToggle }) => (
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0" }}>
+        <div>
+          <p style={{ fontWeight: 800, fontSize: "0.92rem", color: "#1e293b", margin: 0 }}>{label}</p>
+          <p style={{ fontSize: "0.78rem", color: "#64748b", margin: "2px 0 0" }}>{desc}</p>
+        </div>
+        <div 
+          onClick={onToggle}
+          style={{ 
+            width: "44px", height: "24px", borderRadius: "12px", 
+            background: active ? "#2563eb" : "#cbd5e1", 
+            position: "relative", cursor: "pointer", transition: "all .3s ease" 
+          }}
+        >
+          <div style={{ 
+            width: "18px", height: "18px", borderRadius: "50%", background: "#fff", 
+            position: "absolute", top: "3px", left: active ? "23px" : "3px", 
+            transition: "all .2s", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" 
+          }} />
         </div>
       </div>
+    );
 
-      <div style={S.activitySection}>
-        <div style={S.sectionHeading}>📈 Valuation Method</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {["FIFO (First-In, First-Out)", "LIFO (Last-In, First-Out)", "Weighted Average Cost"].map((m, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", background: i === 0 ? "#eff6ff" : "transparent", borderRadius: "12px", border: i === 0 ? "1.5px solid #2563eb" : "1.5px solid transparent", cursor: "pointer" }}>
-              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "2px solid #2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {i === 0 && <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#2563eb" }} />}
-              </div>
-              <span style={{ fontWeight: 700, fontSize: "0.9rem", color: i === 0 ? "#1e40af" : "#64748b" }}>{m}</span>
+    return (
+      <div className="it-fade-up" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "24px" }}>
+          
+          {/* 🔔 Notification Settings */}
+          <div style={S.standardCard("#2563eb")}>
+            <div style={S.sectionHeading}>🔔 Notification Settings</div>
+            <div style={{ display: "flex", flexDirection: "column", divideY: "1px solid #f1f5f9" }}>
+              <SettingToggle 
+                label="Low Stock Alerts" 
+                desc="Get notified when items drop below threshold" 
+                active={config.lowStockAlert} 
+                onToggle={() => handleToggle("lowStockAlert")} 
+              />
+              <SettingToggle 
+                label="Daily Summary Report" 
+                desc="Receive a daily digest of all movements" 
+                active={config.dailySummary} 
+                onToggle={() => handleToggle("dailySummary")} 
+              />
+              <SettingToggle 
+                label="Email Notifications" 
+                desc="Send alerts directly to your inbox" 
+                active={config.emailNotif} 
+                onToggle={() => handleToggle("emailNotif")} 
+              />
             </div>
-          ))}
+          </div>
+
+          {/* 📦 Inventory Settings */}
+          <div style={S.standardCard("#10b981")}>
+            <div style={S.sectionHeading}>📦 Inventory Settings</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "#475569", marginBottom: "8px" }}>Low Stock Threshold</label>
+                <input 
+                  type="number" 
+                  value={config.threshold}
+                  onChange={(e) => setConfig({...config, threshold: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", outline: "none", fontSize: "0.9rem", fontWeight: "700" }}
+                />
+                <p style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "6px", fontWeight: "600" }}>System-wide alert trigger point</p>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "800", color: "#475569", marginBottom: "8px" }}>Default Asset Category</label>
+                <select 
+                  value={config.category}
+                  onChange={(e) => setConfig({...config, category: e.target.value})}
+                  style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1.5px solid #e2e8f0", background: "#fff", outline: "none", fontSize: "0.9rem", fontWeight: "700" }}
+                >
+                  <option>Hardware</option>
+                  <option>Software</option>
+                  <option>Furniture</option>
+                  <option>Peripherals</option>
+                </select>
+              </div>
+              <SettingToggle 
+                label="Auto Restock Alert" 
+                desc="Suggest reorders for critical items" 
+                active={config.autoRestock} 
+                onToggle={() => handleToggle("autoRestock")} 
+              />
+            </div>
+          </div>
+
+          {/* 📝 System Info */}
+          <div style={S.standardCard("#475569")}>
+            <div style={S.sectionHeading}>📝 System Info</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b" }}>App Name</span>
+                <span style={{ fontSize: "0.85rem", fontWeight: "900", color: "#0f172a" }}>InvenTrack</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b" }}>Version</span>
+                <span style={{ fontSize: "0.85rem", fontWeight: "900", color: "#0f172a" }}>1.0.0</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b" }}>Environment</span>
+                <span style={{ padding: "4px 10px", background: "#dcfce7", color: "#166534", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "900" }}>PRODUCTION</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#64748b" }}>Database</span>
+                <span style={{ fontSize: "0.85rem", fontWeight: "900", color: "#10b981" }}>CONNECTED</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "12px" }}>
+          <button 
+            onClick={() => setToast({ show: true, message: "Settings saved successfully!", type: "success" })}
+            style={{ ...S.btnPrimary, padding: "14px 32px", fontSize: "1rem" }}
+          >
+            Save Changes
+          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderStockOrders = () => (
     <div style={S.activitySection}>
@@ -962,7 +1061,7 @@ function Dashboard() {
                       setRefreshToggle(prev => prev + 1);
                       
                       // ✅ Show success toast
-                      setToast({ show: true, message: "📦 Stock updated successfully!", type: "success" });
+                      setToast({ show: true, message: "Stock updated successfully!", type: "success" });
                       
                       // Clear adjustment in UI
                       setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock + p.adjustment, adjustment: 0 } : p));

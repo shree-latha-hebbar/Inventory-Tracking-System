@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const navbarStyles = {
   topBar: {
@@ -31,8 +32,14 @@ const navbarStyles = {
 };
 
 function Navbar({ role }) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
 
   useEffect(() => {
     fetchNotifications();
@@ -70,23 +77,26 @@ function Navbar({ role }) {
   return (
     <div style={navbarStyles.topBar}>
       <div style={{ display: "flex", flexDirection: "column" }}>
+        <p style={{ fontSize: "0.8rem", fontWeight: "800", color: "#2563eb", margin: "0 0 2px" }}>
+          Welcome back, {role ? role.charAt(0).toUpperCase() + role.slice(1).toLowerCase() : "User"} 👋
+        </p>
         <h3 style={{ 
-          fontSize: "1.2rem", 
+          fontSize: "1.4rem", 
           fontWeight: "950", 
-          background: "linear-gradient(135deg, #1e3a8a, #2563eb)", 
+          background: "linear-gradient(135deg, #0f172a, #2563eb)", 
           WebkitBackgroundClip: "text", 
           WebkitTextFillColor: "transparent", 
           margin: 0, 
-          letterSpacing: "-0.5px" 
+          letterSpacing: "-0.8px" 
         }}>
-          Command Center
+          Inventory Control Panel
         </h3>
-        <p style={{ fontSize: "0.72rem", fontWeight: "800", color: "#94a3b8", margin: 0 }}>
+        <p style={{ fontSize: "0.7rem", fontWeight: "700", color: "#94a3b8", margin: "4px 0 0" }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </p>
       </div>
       
-      <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
         <div style={{ position: "relative" }}>
           <button 
             onClick={() => setShowDropdown(!showDropdown)}
@@ -147,6 +157,38 @@ function Navbar({ role }) {
             alt="user" 
           />
         </div>
+
+        {/* Sign Out Button */}
+        <button 
+          onClick={handleLogout}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#dc2626";
+            e.currentTarget.style.color = "#fff";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#fee2e2";
+            e.currentTarget.style.color = "#dc2626";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+          style={{ 
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#fee2e2",
+            color: "#dc2626",
+            border: "1px solid #fecaca",
+            padding: "8px 20px",
+            borderRadius: "12px",
+            fontSize: "0.82rem",
+            fontWeight: "800",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            boxShadow: "0 2px 8px rgba(220, 38, 38, 0.08)"
+          }}
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
+import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import AboutUs from "./pages/AboutUs";
 import Transactions from "./pages/Transactions";
@@ -28,7 +29,7 @@ function App() {
                 <Route path="/transactions" element={<Transactions />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/orders" element={<Orders />} />
-                <Route path="/add-product" element={<EditProduct isNew={true} />} />
+                <Route path="/add-product" element={<AddProduct />} />
                 <Route path="/edit-product/:id" element={<EditProduct />} />
                 <Route path="/contact" element={<Contact />} />
                 {/* Redirect unknown routes to Home */}

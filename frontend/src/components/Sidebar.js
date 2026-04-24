@@ -104,16 +104,6 @@ function Sidebar({ role, activeItem, onMenuClick, onLogout }) {
         ))}
       </nav>
 
-      <div style={sidebarStyles.sidebarFooter}>
-        <button 
-          style={sidebarStyles.logoutBtn}
-          onClick={onLogout}
-          onMouseEnter={(e) => { e.target.style.background = "#ef4444"; e.target.style.color = "#fff"; e.target.style.boxShadow = "0 8px 20px rgba(239,68,68,0.3)"; }}
-          onMouseLeave={(e) => { e.target.style.background = "rgba(239,68,68,0.1)"; e.target.style.color = "#ef4444"; e.target.style.boxShadow = "none"; }}
-        >
-          Sign Out
-        </button>
-      </div>
     </aside>
   );
 }

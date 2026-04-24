@@ -296,7 +296,7 @@ function Products() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         fetchProducts();
-        setToast({ show: true, message: "📦 Stock updated successfully!", type: "success" });
+        setToast({ show: true, message: "Stock updated successfully!", type: "success" });
       } catch (err) {
         alert("Update failed. Unauthorized or Network Error.");
       }

@@ -152,10 +152,11 @@ function AddProduct() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      navigate("/products", { state: { toast: "📦 Asset registered successfully!" } });
+      navigate("/products", { state: { toast: "Asset registered successfully!" } });
     } catch (err) {
       console.error("Failed to add product:", err);
-      setError(err.response?.data?.message || "Failed to add product. Please try again.");
+      const msg = err.response?.data?.message || "Failed to add product. Please verify connectivity and authority.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -208,20 +209,26 @@ function AddProduct() {
               />
 
               <label style={S.label}>Category</label>
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                style={{ ...S.input, appearance: "none" }}
-                required
-              >
-                <option value="">Select Category</option>
-                <option value="Hardware">Hardware</option>
-                <option value="Monitor">Monitor</option>
-                <option value="Peripheral">Peripheral</option>
-                <option value="Laptops">Laptops</option>
-                <option value="Furniture">Furniture</option>
-              </select>
+              <div style={{ position: "relative" }}>
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  style={{ ...S.input, appearance: "none" }}
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Laptops">Laptops</option>
+                  <option value="Monitor">Monitors</option>
+                  <option value="Peripheral">Peripherals</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Furniture">Furniture</option>
+                  <option value="Stationery">Stationery</option>
+                  <option value="Office Supplies">Office Supplies</option>
+                </select>
+                <div style={{ position: "absolute", right: "16px", top: "16px", pointerEvents: "none", fontSize: "0.8rem", color: "#94a3b8" }}>▼</div>
+              </div>
 
               <label style={S.label}>Unit Price</label>
               <input
