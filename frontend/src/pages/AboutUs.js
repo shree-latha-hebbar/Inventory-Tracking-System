@@ -293,45 +293,6 @@ export default function AboutUs() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (!document.getElementById("premium-styles")) {
-      const style = document.createElement("style");
-      style.id = "premium-styles";
-      style.textContent = `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@700;800;900;1000&family=Inter:wght@900&display=swap');
-        
-        @keyframes floating {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-
-        @keyframes orbitRotate {
-          from { transform: rotate(0deg) translateX(5px) rotate(0deg); }
-          to { transform: rotate(360deg) translateX(5px) rotate(-360deg); }
-        }
-
-        @keyframes neonPulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.2), inset 0 0 10px rgba(37, 99, 235, 0.1); border-color: #2563eb; }
-          50% { box-shadow: 0 0 50px rgba(37, 99, 235, 0.5), inset 0 0 20px rgba(37, 99, 235, 0.2); border-color: #3b82f6; }
-        }
-
-        @keyframes glowPulse {
-          0%, 100% { filter: drop-shadow(0 0 5px rgba(37, 99, 235, 0.5)); }
-          50% { filter: drop-shadow(0 0 15px rgba(37, 99, 235, 0.9)); }
-        }
-
-        .floating-section { animation: floating 8s ease-in-out infinite; }
-        .bento-hover:hover { transform: scale(1.03); z-index: 10; box-shadow: 0 30px 70px rgba(0,0,0,0.1); }
-        .orbit-icon { animation: orbitRotate 6s linear infinite; }
-        .neon-admin { animation: neonPulse 3s ease-in-out infinite; }
-        .glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
-        
-        .tracking-black { letter-spacing: -2px; }
-      `;
-      document.head.appendChild(style);
-    }
-  }, []);
-
   return (
     <div style={S.root}>
       {/* Navbar */}
