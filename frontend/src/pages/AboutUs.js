@@ -78,25 +78,65 @@ const S = {
   },
   /* ── Hero ── */
   hero: {
-    padding: "160px 6% 100px",
-    textAlign: "center",
-    background: "radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent), radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.03), transparent)",
+    padding: "160px 8% 100px",
+    background: "radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent), radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.05), transparent)",
+  },
+  heroGrid: {
+    display: "grid",
+    gridTemplateColumns: "1.2fr 1fr",
+    gap: "60px",
+    alignItems: "center",
+  },
+  heroColA: {
+    textAlign: "left",
   },
   heroH1: {
-    fontSize: "clamp(3rem, 6vw, 5.5rem)",
+    fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
     fontWeight: "1000",
     letterSpacing: "-4px",
-    lineHeight: "0.95",
+    lineHeight: "1",
     color: "#0f172a",
     marginBottom: "32px",
   },
-  heroSubtitle: {
-    fontSize: "1.25rem",
-    color: "#64748b",
-    maxWidth: "800px",
-    margin: "0 auto",
-    lineHeight: "1.6",
-    letterSpacing: "-0.2px",
+  heroGlassCard: {
+    background: "rgba(255, 255, 255, 0.5)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255, 255, 255, 0.4)",
+    borderRadius: "24px",
+    padding: "32px",
+    marginTop: "24px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.02)",
+    transition: "transform 0.3s ease",
+  },
+  heroImage: {
+    width: "100%",
+    height: "550px",
+    borderRadius: "48px",
+    objectFit: "cover",
+    boxShadow: "0 40px 80px rgba(30, 58, 138, 0.15)",
+  },
+  /* ── Footer ── */
+  footer: {
+    padding: "40px 8% 24px",
+    background: "#0f172a",
+    color: "#94a3b8",
+    borderTop: "1px solid rgba(255,255,255,0.05)",
+  },
+  footerColTitle: {
+    color: "#fff",
+    fontSize: "0.85rem",
+    fontWeight: "800",
+    marginBottom: "16px",
+    textTransform: "uppercase",
+    letterSpacing: "1px",
+  },
+  footerLink: {
+    color: "#94a3b8",
+    textDecoration: "none",
+    fontSize: "0.85rem",
+    marginBottom: "8px",
+    display: "block",
+    transition: "color 0.3s",
   },
   /* ── Bento Grid ── */
   bentoContainer: {
@@ -188,7 +228,7 @@ const S = {
   },
   /* ── System Intel ── */
   intelSection: {
-    padding: "100px 6%",
+    padding: "80px 6% 40px",
     background: "#0f172a", // Slate-900
     color: "#fff",
     textAlign: "center",
@@ -309,33 +349,56 @@ export default function AboutUs() {
 
       {/* Hero Section */}
       <header style={S.hero}>
-        <div className="floating-section">
-          <h1 style={S.heroH1}>The Next Generation <br /> of <span style={{ color: "#2563eb" }}>Inventory Control</span></h1>
-          <p style={S.heroSubtitle}>
-            A comprehensive, real-time inventory management solution designed to streamline warehouse operations and ensure stock accuracy across your entire organization.
-          </p>
+        <div style={S.heroGrid}>
+          <div style={S.heroColA} className="floating-section">
+            <span style={{ textTransform: "uppercase", fontSize: "0.9rem", fontWeight: "900", letterSpacing: "3px", color: "#2563eb", marginBottom: "20px", display: "block" }}>Innovation in Motion</span>
+            <h1 style={S.heroH1}>The Next Generation <br /> of <span style={{ color: "#2563eb" }}>Inventory Control</span></h1>
+            
+            <div style={{ marginTop: "40px" }}>
+              <div style={S.heroGlassCard} className="bento-hover">
+                <h4 style={{ color: "#1e3a8a", fontWeight: "900", marginBottom: "8px", fontSize: "1.1rem" }}>Our Mission</h4>
+                <p style={{ fontSize: "0.95rem", lineHeight: "1.6", color: "#475569" }}>
+                  To simplify inventory management by providing a real-time, user-friendly system that helps businesses track stock efficiently and reduce manual errors.
+                </p>
+              </div>
+
+              <div style={{ ...S.heroGlassCard, marginTop: "20px" }} className="bento-hover">
+                <h4 style={{ color: "#1e3a8a", fontWeight: "900", marginBottom: "8px", fontSize: "1.1rem" }}>Our Vision</h4>
+                <p style={{ fontSize: "0.95rem", lineHeight: "1.6", color: "#475569" }}>
+                  To build a reliable and scalable inventory platform that enhances operational efficiency and supports smarter decision-making.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <img 
+              src="https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=1200" 
+              alt="Modern Inventory Management" 
+              style={S.heroImage} 
+            />
+          </div>
         </div>
       </header>
 
       {/* Bento Grid */}
       <section style={S.bentoContainer}>
-        {/* Mission */}
+        {/* Analytics Card */}
         <div style={{ ...S.glassCard, ...S.itemMission }} className="bento-hover">
           <div>
-            <span style={{ textTransform: "uppercase", fontSize: "0.85rem", fontWeight: "900", letterSpacing: "2px", color: "rgba(255,255,255,0.6)" }}>Our Mission</span>
-            <h2 style={{ fontSize: "3rem", fontWeight: "1000", marginTop: "16px", letterSpacing: "-1.5px" }}>Bridging the <br /> Logistic Void</h2>
+            <span style={{ textTransform: "uppercase", fontSize: "0.85rem", fontWeight: "900", letterSpacing: "2px", color: "rgba(255,255,255,0.6)" }}>Advanced Analytics</span>
+            <h2 style={{ fontSize: "3rem", fontWeight: "1000", marginTop: "16px", letterSpacing: "-1.5px" }}>Precision <br /> Intelligence</h2>
           </div>
           <p style={{ fontSize: "1.1rem", opacity: 0.9, maxWidth: "500px", lineHeight: "1.6" }}>
-            We empower businesses with precise stock visibility. InvenTrack eliminates manual errors and provides a centralized platform for tracking every product movement within your warehouse.
+            Harness the power of data to predict stock needs and optimize storage efficiency. Our intelligent algorithms ensure you never miss a beat in your supply chain.
           </p>
         </div>
 
-        {/* Vision */}
+        {/* Global Access */}
         <div style={{ ...S.glassCard, ...S.itemVision }} className="bento-hover">
           <div style={S.itemVisionVisual}></div>
           <div style={{ position: "relative" }}>
-            <span style={{ textTransform: "uppercase", fontSize: "0.75rem", fontWeight: "900", letterSpacing: "2px", color: "#64748b" }}>Technology</span>
-            <h3 style={{ fontSize: "1.75rem", fontWeight: "1000", marginTop: "8px", letterSpacing: "-1px" }}>Data-Powered <br /> Logistics</h3>
+            <span style={{ textTransform: "uppercase", fontSize: "0.75rem", fontWeight: "900", letterSpacing: "2px", color: "#64748b" }}>Global Scale</span>
+            <h3 style={{ fontSize: "1.75rem", fontWeight: "1000", marginTop: "8px", letterSpacing: "-1px" }}>Multi-Node <br /> Logistics</h3>
           </div>
         </div>
 
@@ -415,13 +478,49 @@ export default function AboutUs() {
       </div>
 
       {/* Footer */}
-      <footer style={{ padding: "60px 6% 40px", background: "#0f172a", color: "#94a3b8", textAlign: "center" }}>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "40px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "20px" }}>
-            <img src={logo} alt="Logo" style={{ width: "32px", opacity: 0.8 }} />
-            <span style={{ color: "#fff", fontWeight: "900", fontSize: "1.25rem", letterSpacing: "-0.5px" }}>InvenTrack</span>
+      <footer style={S.footer}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "40px", textAlign: "left", marginBottom: "32px" }}>
+            {/* Logo + Description */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                <img src={logo} alt="InvenTrack" style={{ width: "24px" }} />
+                <span style={{ color: "#fff", fontWeight: "900", fontSize: "1.25rem", letterSpacing: "-0.5px" }}>InvenTrack</span>
+              </div>
+              <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "#64748b", maxWidth: "280px" }}>
+                InvenTrack helps businesses manage products, monitor stock levels, and track inventory operations efficiently.
+              </p>
+            </div>
+            
+            {/* Quick Links */}
+            <div>
+              <h5 style={S.footerColTitle}>Quick Links</h5>
+              <Link to="/" style={S.footerLink}>Home</Link>
+              <Link to="/about" style={{ ...S.footerLink, color: "#fff" }}>About Us</Link>
+              <Link to="/" style={S.footerLink}>Products</Link>
+              <Link to="/" style={S.footerLink}>Reports</Link>
+            </div>
+
+            {/* System Features */}
+            <div>
+              <h5 style={S.footerColTitle}>System Features</h5>
+              <span style={S.footerLink}>Inventory Tracking</span>
+              <span style={S.footerLink}>Low Stock Alerts</span>
+              <span style={S.footerLink}>Role-Based Access</span>
+              <span style={S.footerLink}>Transactions</span>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h5 style={S.footerColTitle}>Contact</h5>
+              <p style={{ ...S.footerLink, marginBottom: "4px" }}>inventrack.support@gmail.com</p>
+              <p style={{ ...S.footerLink }}>Bengaluru, India</p>
+            </div>
           </div>
-          <p style={{ fontSize: "0.85rem", fontWeight: "600" }}>© 2026 InvenTrack Enterprise Solutions. All rights reserved.</p>
+          
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.03)", paddingTop: "20px", textAlign: "center" }}>
+            <p style={{ fontSize: "0.8rem", fontWeight: "600", opacity: 0.6 }}>© 2026 InvenTrack. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>
