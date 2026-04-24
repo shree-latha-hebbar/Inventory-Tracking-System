@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Toast from "../components/Toast";
 
 const S = {
   root: {
@@ -74,6 +75,7 @@ function Orders() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newOrder, setNewOrder] = useState({ supplier: "", product_id: "", quantity: "" });
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   const role = (localStorage.getItem("role") || "Staff").toLowerCase();
   const token = localStorage.getItem("access_token");
@@ -109,6 +111,7 @@ function Orders() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsDrawerOpen(false);
+      setToast({ show: true, message: "✅ Order placed successfully!", type: "success" });
       fetchData();
     } catch (err) {
       console.error("Order creation failed:", err);
@@ -122,6 +125,11 @@ function Orders() {
       await axios.put(`http://127.0.0.1:5000/api/orders/${orderId}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (newStatus === "Received") {
+        setToast({ show: true, message: "📦 Stock updated successfully!", type: "success" });
+      } else {
+        setToast({ show: true, message: `✅ Order status updated to ${newStatus}!`, type: "success" });
+      }
       fetchData();
     } catch (err) {
       alert(`Failed to update status to ${newStatus}`);
@@ -137,12 +145,11 @@ function Orders() {
     if (menu === "Dashboard") navigate("/dashboard");
     if (menu === "Manage Products" || menu === "Product Search") navigate("/products");
     if (menu === "Stock Orders") navigate("/orders");
-    if (menu === "Inventory Reports") navigate("/reports");
-    if (menu === "Transaction History") navigate("/transactions");
-    if (menu === "Suppliers") navigate("/dashboard", { state: { activeItem: "Suppliers" } });
-    
+    if (menu === "Inventory Reports" || menu === "Transaction History") navigate("/transactions");
+    if (menu === "Reports") navigate("/reports");
+
     // 🛡️ Admin/Manager Navigation back to Dashboard
-    const dashboardItems = ["Update Stock", "User Roles", "Audit Logs", "System Config"];
+    const dashboardItems = ["User Roles", "Audit Logs", "System Config"];
     if (dashboardItems.includes(menu)) {
       navigate("/dashboard", { state: { activeItem: menu } });
     }
@@ -167,6 +174,14 @@ function Orders() {
       
       <main style={S.main}>
         <Navbar role={role} />
+
+        {toast.show && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast({ ...toast, show: false })} 
+          />
+        )}
 
         {/* ── Order Details Drawer ── */}
         {isDetailsOpen && selectedOrder && (

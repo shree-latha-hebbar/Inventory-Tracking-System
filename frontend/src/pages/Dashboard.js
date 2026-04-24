@@ -4,6 +4,7 @@ import axios from "axios";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Toast from "../components/Toast";
 
 const S = {
   root: {
@@ -261,6 +262,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const [stockItems, setStockItems] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   useEffect(() => {
     const savedRole = localStorage.getItem("role");
@@ -959,6 +961,9 @@ function Dashboard() {
                       // 🔄 Force refresh dashboard data
                       setRefreshToggle(prev => prev + 1);
                       
+                      // ✅ Show success toast
+                      setToast({ show: true, message: "📦 Stock updated successfully!", type: "success" });
+                      
                       // Clear adjustment in UI
                       setStockItems(prev => prev.map(p => p.id === item.id ? { ...p, stock: p.stock + p.adjustment, adjustment: 0 } : p));
                     } catch (err) {
@@ -1062,6 +1067,15 @@ function Dashboard() {
       {/* ── Main ── */}
       <main style={S.main}>
         {renderGlobalHeader()}
+
+        {toast.show && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast({ ...toast, show: false })} 
+          />
+        )}
+
         {renderContent()}
         <Footer />
       </main>
