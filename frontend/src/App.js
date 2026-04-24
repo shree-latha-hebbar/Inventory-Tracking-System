@@ -11,6 +11,7 @@ import AboutUs from "./pages/AboutUs";
 import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
 import Orders from "./pages/Orders";
+import Contact from "./pages/Contact";
 import { NotificationProvider } from "./context/NotificationContext";
 
 function App() {
