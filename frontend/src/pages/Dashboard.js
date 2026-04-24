@@ -304,7 +304,7 @@ function Dashboard() {
         const headers = { Authorization: `Bearer ${token}` };
         
         // 🔍 Run System Audit (one-time check on load)
-        axios.post("http://127.0.0.1:5000/api/notifications/audit", {}, { headers }).catch(() => {});
+        axios.post("http://127.0.0.1:5001/api/notifications/audit", {}, { headers }).catch(() => {});
 
         const fetchWithCatch = async (url) => {
           try {
@@ -320,16 +320,16 @@ function Dashboard() {
         };
 
         const [prodData, orderData, txnData, sumData, velocityData, criticalData, trendData, catData, suppData, userData] = await Promise.all([
-          fetchWithCatch("http://127.0.0.1:5000/api/products/"),
-          fetchWithCatch("http://127.0.0.1:5000/api/orders/"),
-          fetchWithCatch("http://127.0.0.1:5000/api/transactions/"),
-          fetchWithCatch("http://127.0.0.1:5000/api/reports/summary"),
-          fetchWithCatch("http://127.0.0.1:5000/api/reports/velocity"),
-          fetchWithCatch("http://127.0.0.1:5000/api/reports/critical-list"),
-          fetchWithCatch("http://127.0.0.1:5000/api/reports/sales-trend"),
-          fetchWithCatch("http://127.0.0.1:5000/api/reports/category-distribution"),
-          fetchWithCatch("http://127.0.0.1:5000/api/suppliers/"),
-          fetchWithCatch("http://127.0.0.1:5000/api/users/")
+          fetchWithCatch("http://127.0.0.1:5001/api/products/"),
+          fetchWithCatch("http://127.0.0.1:5001/api/orders/"),
+          fetchWithCatch("http://127.0.0.1:5001/api/transactions/"),
+          fetchWithCatch("http://127.0.0.1:5001/api/reports/summary"),
+          fetchWithCatch("http://127.0.0.1:5001/api/reports/velocity"),
+          fetchWithCatch("http://127.0.0.1:5001/api/reports/critical-list"),
+          fetchWithCatch("http://127.0.0.1:5001/api/reports/sales-trend"),
+          fetchWithCatch("http://127.0.0.1:5001/api/reports/category-distribution"),
+          fetchWithCatch("http://127.0.0.1:5001/api/suppliers/"),
+          fetchWithCatch("http://127.0.0.1:5001/api/users/")
         ]);
 
         if (prodData) {
@@ -366,7 +366,7 @@ function Dashboard() {
   const handleSendTestEmail = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await axios.post("http://127.0.0.1:5000/api/notifications/test-email", {}, {
+      const res = await axios.post("http://127.0.0.1:5001/api/notifications/test-email", {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setToast({ show: true, message: res.data.message, type: "success" });
@@ -379,7 +379,7 @@ function Dashboard() {
   const handleUpdateUserRole = async (userId, newRole) => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.put(`http://127.0.0.1:5000/api/users/${userId}`, { role: newRole }, {
+      await axios.put(`http://127.0.0.1:5001/api/users/${userId}`, { role: newRole }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setToast({ show: true, message: "User role updated successfully!", type: "success" });
@@ -394,7 +394,7 @@ function Dashboard() {
     if (!window.confirm("Are you sure you want to revoke all access for this user?")) return;
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete(`http://127.0.0.1:5000/api/users/${userId}`, {
+      await axios.delete(`http://127.0.0.1:5001/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setToast({ show: true, message: "User access revoked.", type: "success" });
@@ -408,7 +408,7 @@ function Dashboard() {
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://127.0.0.1:5000/api/auth/register", userFormData);
+      await axios.post("http://127.0.0.1:5001/api/auth/register", userFormData);
       setToast({ show: true, message: "New employee added successfully!", type: "success" });
       setIsAddUserModalOpen(false);
       setUserFormData({ username: "", email: "", password: "", role: "Staff" });
@@ -1257,7 +1257,7 @@ function Dashboard() {
                     
                     try {
                       const token = localStorage.getItem("access_token");
-                      await axios.post("http://127.0.0.1:5000/api/transactions/", {
+                      await axios.post("http://127.0.0.1:5001/api/transactions/", {
                         product_id: item.id,
                         quantity: item.adjustment,
                         transaction_type: item.adjustment > 0 ? "RESTOCK" : "ADJUSTMENT",

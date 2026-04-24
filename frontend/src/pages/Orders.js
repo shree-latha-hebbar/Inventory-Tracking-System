@@ -92,8 +92,8 @@ function Orders() {
     try {
       setLoading(true);
       const [ordRes, prodRes] = await Promise.all([
-        axios.get("http://127.0.0.1:5000/api/orders/", { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get("http://127.0.0.1:5000/api/products/", { headers: { Authorization: `Bearer ${token}` } })
+        axios.get("http://127.0.0.1:5001/api/orders/", { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get("http://127.0.0.1:5001/api/products/", { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setOrders(ordRes.data);
       setProducts(prodRes.data);
@@ -107,7 +107,7 @@ function Orders() {
   const handleCreateOrder = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://127.0.0.1:5000/api/orders/", newOrder, {
+      await axios.post("http://127.0.0.1:5001/api/orders/", newOrder, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setIsDrawerOpen(false);
@@ -122,7 +122,7 @@ function Orders() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await axios.put(`http://127.0.0.1:5000/api/orders/${orderId}`, { status: newStatus }, {
+      await axios.put(`http://127.0.0.1:5001/api/orders/${orderId}`, { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (newStatus === "Received") {

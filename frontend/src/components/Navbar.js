@@ -51,7 +51,7 @@ function Navbar({ role }) {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-      const res = await axios.get("http://127.0.0.1:5000/api/notifications/", {
+      const res = await axios.get("http://127.0.0.1:5001/api/notifications/", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(res.data);
@@ -63,7 +63,7 @@ function Navbar({ role }) {
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.put(`http://127.0.0.1:5000/api/notifications/read/${id}`, {}, {
+      await axios.put(`http://127.0.0.1:5001/api/notifications/read/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();

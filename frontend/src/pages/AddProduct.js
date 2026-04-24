@@ -148,7 +148,7 @@ function AddProduct() {
         current: Number(form.current),
       };
 
-      await axios.post("http://127.0.0.1:5000/api/products/", payload, {
+      await axios.post("http://127.0.0.1:5001/api/products/", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

@@ -255,7 +255,7 @@ function Products() {
     try {
       setLoading(true);
       const token = localStorage.getItem("access_token");
-      const response = await axios.get("http://127.0.0.1:5000/api/products/", {
+      const response = await axios.get("http://127.0.0.1:5001/api/products/", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProducts(response.data);
@@ -276,7 +276,7 @@ function Products() {
     if (window.confirm(`⚠️ ARE YOU SURE?\n\nDeleting "${name}" is a permanent action.`)) {
       try {
         const token = localStorage.getItem("access_token");
-        await axios.delete(`http://127.0.0.1:5000/api/products/${id}`, {
+        await axios.delete(`http://127.0.0.1:5001/api/products/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         fetchProducts();
@@ -291,7 +291,7 @@ function Products() {
     if (newVal !== null && !isNaN(newVal)) {
       try {
         const token = localStorage.getItem("access_token");
-        await axios.put(`http://127.0.0.1:5000/api/products/${id}`, 
+        await axios.put(`http://127.0.0.1:5001/api/products/${id}`, 
           { current: parseInt(newVal) },
           { headers: { Authorization: `Bearer ${token}` } }
         );

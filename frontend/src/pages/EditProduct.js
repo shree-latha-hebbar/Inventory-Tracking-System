@@ -141,7 +141,7 @@ function EditProduct() {
     try {
       setLoading(true);
       const token = localStorage.getItem("access_token");
-      const response = await axios.get(`http://127.0.0.1:5000/api/products/${id}`, {
+      const response = await axios.get(`http://127.0.0.1:5001/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const item = response.data;
@@ -202,7 +202,7 @@ function EditProduct() {
 
     try {
       const token = localStorage.getItem("access_token");
-      await axios.put(`http://127.0.0.1:5000/api/products/${id}`, productData, {
+      await axios.put(`http://127.0.0.1:5001/api/products/${id}`, productData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       navigate("/products");

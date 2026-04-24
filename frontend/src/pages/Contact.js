@@ -194,7 +194,7 @@ function Contact() {
     }
     
     try {
-      await axios.post("http://127.0.0.1:5000/api/notifications/contact", formData);
+      await axios.post("http://127.0.0.1:5001/api/notifications/contact", formData);
       setSubmitted(true);
       setFormData({ fullName: '', workEmail: '', message: '' });
     } catch (err) {

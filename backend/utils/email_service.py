@@ -154,3 +154,48 @@ def send_delivery_confirmation(order):
     </div>
     """
     return send_email(subject, html_body, is_html=True)
+
+def send_password_reset_email(user, reset_token):
+    """
+    Sends a password reset link to the user's registered email.
+    The reset link will be: http://localhost:3000/reset-password?token={token}
+    """
+    # Frontend reset URL - update this for production
+    reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
+    
+    subject = "🔐 InvenTrack: Password Reset Request"
+    
+    html_body = f"""
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 600px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="color: #0f172a; font-size: 1.5rem; margin: 0;">InvenTrack</h1>
+            <p style="color: #64748b; font-size: 0.85rem; margin: 4px 0 0;">Intelligent Inventory Management</p>
+        </div>
+        
+        <h2 style="color: #ef4444; margin-bottom: 16px;">Password Reset Request</h2>
+        <p style="color: #475569; font-size: 16px; line-height: 1.5;">
+            Hello <strong>{user.username}</strong>,
+        </p>
+        <p style="color: #475569; font-size: 16px; line-height: 1.5;">
+            We received a request to reset your password. Click the button below to create a new password for your account.
+        </p>
+        
+        <div style="text-align: center; margin: 32px 0;">
+            <a href="{reset_link}" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem;">
+                Reset My Password
+            </a>
+        </div>
+        
+        <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+            <p style="margin: 0; color: #64748b; font-size: 0.85rem;">
+                <strong>⚠️ Security Notice:</strong> This link will expire in <strong>1 hour</strong>. If you did not request a password reset, please ignore this email. No changes will be made to your account.
+            </p>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #94a3b8; text-align: center;">
+            This is an automated message from the InvenTrack Intelligence System. Please do not reply to this email.
+        </p>
+    </div>
+    """
+    return send_email(subject, html_body, is_html=True)

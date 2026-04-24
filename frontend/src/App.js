@@ -13,6 +13,7 @@ import Transactions from "./pages/Transactions";
 import Reports from "./pages/Reports";
 import Orders from "./pages/Orders";
 import Contact from "./pages/Contact";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
     return (
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/add-product" element={<AddProduct />} />
                 <Route path="/edit-product/:id" element={<EditProduct />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 {/* Redirect unknown routes to Home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

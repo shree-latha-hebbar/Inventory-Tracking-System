@@ -91,9 +91,9 @@ function Reports() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [sumRes, velRes, critRes] = await Promise.all([
-        axios.get("http://127.0.0.1:5000/api/reports/summary", { headers }),
-        axios.get("http://127.0.0.1:5000/api/reports/velocity", { headers }),
-        axios.get("http://127.0.0.1:5000/api/reports/critical-list", { headers })
+        axios.get("http://127.0.0.1:5001/api/reports/summary", { headers }),
+        axios.get("http://127.0.0.1:5001/api/reports/velocity", { headers }),
+        axios.get("http://127.0.0.1:5001/api/reports/critical-list", { headers })
       ]);
 
       setSummary(sumRes.data);

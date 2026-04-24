@@ -258,6 +258,12 @@ function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Forgot Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMsg, setForgotMsg] = useState(null);
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   const rolePresets = {
     manager: { email: "manager@inventrack.com", password: "password123" },
     staff: { email: "staff@inventrack.com", password: "password123" },
@@ -276,7 +282,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:5000/api/auth/login", {
+      const response = await axios.post("http://127.0.0.1:5001/api/auth/login", {
         email: email,
         password: password,
       });
@@ -293,6 +299,24 @@ function Login() {
       setError(err.response?.data?.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    setForgotMsg(null);
+    try {
+      const res = await axios.post("http://127.0.0.1:5001/api/auth/forgot-password", {
+        email: forgotEmail
+      });
+      setForgotMsg({ type: "success", text: res.data.message });
+      setForgotEmail("");
+    } catch (err) {
+      setForgotMsg({ type: "error", text: err.response?.data?.message || "Something went wrong." });
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -434,7 +458,7 @@ function Login() {
               <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} style={{ cursor: "pointer" }} />
               Remember me
             </label>
-            <button type="button" style={S.forgot} onMouseEnter={(e) => e.target.style.textDecoration = "underline"} onMouseLeave={(e) => e.target.style.textDecoration = "none"}>Forgot password?</button>
+            <button type="button" style={S.forgot} onClick={() => setShowForgotModal(true)} onMouseEnter={(e) => e.target.style.textDecoration = "underline"} onMouseLeave={(e) => e.target.style.textDecoration = "none"}>Forgot password?</button>
           </div>
 
           {error && (
@@ -471,6 +495,54 @@ function Login() {
           © {new Date().getFullYear()} InvenTrack. Secure access for logistics networks. <br />
           System Status: <span style={{ color: "#10b981", fontWeight: "700" }}>● All Systems Operational</span>
         </p>
+
+        {/* ── Forgot Password Modal ── */}
+        {showForgotModal && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, backdropFilter: "blur(4px)" }}>
+            <div style={{ background: "#fff", padding: "40px", borderRadius: "24px", width: "440px", boxShadow: "0 25px 50px rgba(0,0,0,0.25)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#0f172a" }}>Reset Password</h3>
+                <button onClick={() => { setShowForgotModal(false); setForgotMsg(null); setForgotEmail(""); }} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#94a3b8" }}>✕</button>
+              </div>
+              <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "24px", lineHeight: 1.5 }}>
+                Enter your <strong>email address</strong> or <strong>username</strong> and we'll send you a secure link to reset your password.
+              </p>
+              <form onSubmit={handleForgotPassword} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Email or Username"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    style={{ ...S.input, height: "48px" }}
+                    required
+                  />
+                </div>
+                {forgotMsg && (
+                  <div style={{
+                    background: forgotMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+                    border: `1.5px solid ${forgotMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`,
+                    color: forgotMsg.type === "success" ? "#166534" : "#b91c1c",
+                    padding: "10px 14px",
+                    borderRadius: "12px",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                  }}>
+                    {forgotMsg.text}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                  <button type="button" onClick={() => { setShowForgotModal(false); setForgotMsg(null); setForgotEmail(""); }} style={{ flex: 1, padding: "14px", borderRadius: "14px", border: "none", background: "#f1f5f9", color: "#475569", fontWeight: 700, cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={forgotLoading} style={{ flex: 2, padding: "14px", borderRadius: "14px", border: "none", background: "#0f172a", color: "#fff", fontWeight: 700, cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1 }}>
+                    {forgotLoading ? "Sending..." : "Send Reset Link"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

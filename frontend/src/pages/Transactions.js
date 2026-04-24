@@ -117,8 +117,8 @@ function Transactions() {
       const headers = { Authorization: `Bearer ${token}` };
       
       const [txnRes, prodRes] = await Promise.all([
-        axios.get("http://127.0.0.1:5000/api/transactions/", { headers }),
-        axios.get("http://127.0.0.1:5000/api/products/", { headers })
+        axios.get("http://127.0.0.1:5001/api/transactions/", { headers }),
+        axios.get("http://127.0.0.1:5001/api/products/", { headers })
       ]);
       
       setTransactions(txnRes.data);
@@ -143,7 +143,7 @@ function Transactions() {
         notes: newTxn.notes
       };
 
-      await axios.post("http://127.0.0.1:5000/api/transactions/", payload, {
+      await axios.post("http://127.0.0.1:5001/api/transactions/", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
