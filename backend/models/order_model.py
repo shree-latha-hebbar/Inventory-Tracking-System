@@ -18,6 +18,26 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Order
         load_instance = True
+    
+    # 🚀 Dynamically include product name in the API response
+    product_name = ma.Method("get_product_name")
+
+    def get_product_name(self, obj):
+        from models.product_model import Product
+        if obj.product_id:
+            # Check if product_id is numeric or the string UID
+            try:
+                # Try numeric lookup first
+                product = Product.query.get(int(obj.product_id))
+                if product: return product.name
+            except:
+                pass
+            
+            # Fallback to string product_id lookup
+            product = Product.query.filter_by(product_id=obj.product_id).first()
+            if product: return product.name
+            
+        return "Unknown Product"
 
 order_schema = OrderSchema()
 orders_schema = OrderSchema(many=True)
