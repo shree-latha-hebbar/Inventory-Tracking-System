@@ -79,6 +79,13 @@ def update_product(product_id):
 @jwt_required()
 def restore_product(product_id):
     """Admin/Manager route to bring back a temporarily deleted item"""
+    current_user_id = get_jwt_identity()
+    from models.user_model import User
+    requester = User.query.get(current_user_id)
+    
+    if not requester or requester.role.lower() not in ['admin', 'manager']:
+        return jsonify({"message": "Access denied. Restoration requires Manager or Admin privileges."}), 403
+
     product = Product.query.filter_by(product_id=product_id).first()
     if not product:
         return jsonify({"message": "Asset blueprint not found"}), 404
@@ -102,6 +109,10 @@ def restore_product(product_id):
 @products_bp.route('/<string:product_id>', methods=['DELETE'])
 @jwt_required()
 def delete_product(product_id):
+    current_user_id = get_jwt_identity()
+    from models.user_model import User
+    requester = User.query.get(current_user_id)
+    
     product = Product.query.filter_by(product_id=product_id).first()
     if not product:
         return jsonify({"message": "Product not found"}), 404
@@ -111,15 +122,22 @@ def delete_product(product_id):
     reason = data.get('reason', 'Not Specified')
     
     if mode == 'permanent':
+        # ONLY Admins can permanently purge assets
+        if not requester or requester.role.lower() != 'admin':
+            return jsonify({"message": "Access denied. Permanent deletion requires Admin privileges."}), 403
+            
         db.session.delete(product)
         db.session.commit()
         return jsonify({"message": f"Asset '{product.name}' has been permanently purged from system"}), 200
     else:
+        # Managers and Admins can archive/restore
+        if not requester or requester.role.lower() not in ['admin', 'manager']:
+            return jsonify({"message": "Access denied. Archiving requires Manager or Admin privileges."}), 403
+            
         # Log this disposal as a transaction for financial reporting
-        user_id = get_jwt_identity()
         disposal_txn = Transaction(
             product_id=product.id,
-            user_id=user_id,
+            user_id=current_user_id,
             quantity=-product.current, # Removing all current stock
             transaction_type='DISPOSAL',
             notes=f"Asset decommissioned. Reason: {reason}"

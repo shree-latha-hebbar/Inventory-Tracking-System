@@ -13,7 +13,15 @@ def is_valid_email(email):
     return re.match(pattern, email) is not None
 
 @auth_bp.route('/register', methods=['POST'])
+@jwt_required()
 def register():
+    # ONLY Admins can register new users
+    current_user_id = get_jwt_identity()
+    requester = User.query.get(current_user_id)
+    
+    if not requester or requester.role.lower() != 'admin':
+        return jsonify({"message": "Access denied. Only Admins can create new user accounts."}), 403
+
     data = request.get_json()
     
     # Check if user already exists

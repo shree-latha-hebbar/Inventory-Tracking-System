@@ -408,7 +408,9 @@ function Dashboard() {
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://127.0.0.1:5001/api/auth/register", userFormData);
+      const token = localStorage.getItem("access_token");
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.post("http://127.0.0.1:5001/api/auth/register", userFormData, { headers });
       setToast({ show: true, message: "New employee added successfully!", type: "success" });
       setIsAddUserModalOpen(false);
       setUserFormData({ username: "", email: "", password: "", role: "Staff" });
