@@ -1,70 +1,169 @@
-# Getting Started with Create React App
+# 📦 InvenTrack — Inventory Tracking System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack web application for real-time inventory management. InvenTrack helps businesses track stock levels, manage products, monitor transactions, generate reports, and receive automated low-stock alerts — all through a clean, role-based dashboard.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## ✨ Features
 
-### `npm start`
+- **🔐 Role-Based Access Control** — Three roles: Admin, Manager, and Staff, each with different permissions for viewing, editing, and deleting inventory data
+- **📊 Live Dashboard** — Real-time summary of total assets, inventory value, critical stock items, and 7-day movement flow
+- **🛒 Product Management** — Add, edit, archive, and restore products with full audit trail via transactions
+- **📦 Order Management** — Auto-generates pending purchase orders when stock falls below threshold
+- **🔔 Smart Stock Alerts** — Automatically triggers in-app notifications and sends email alerts when stock is critically low (≤10% of capacity or ≤5 units)
+- **📈 Reports & Analytics** — Sales trends, stock velocity, category distribution charts, and critical stock lists
+- **🔄 Transaction Logging** — Every stock change (sale, adjustment, disposal, restore) is logged with user and timestamp
+- **🔑 Secure Auth** — JWT-based authentication with bcrypt password hashing, forgot/reset password via email
+- **🗃️ Soft Delete / Archive** — Products can be archived (Managers) or permanently deleted (Admins only)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Tech Stack
 
-### `npm test`
+### Frontend
+![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Backend
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
+![Python](https://img.shields.io/badge/Python_3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📁 Project Structure
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+Inventory-Tracking-System/
+├── backend/
+│   ├── app.py                  # Flask app factory
+│   ├── config.py               # Configuration (JWT, DB, email)
+│   ├── requirements.txt
+│   ├── models/
+│   │   ├── user_model.py       # User with role & reset token
+│   │   ├── product_model.py    # Product with soft delete
+│   │   ├── order_model.py      # Purchase orders
+│   │   ├── transaction_model.py
+│   │   └── notification_model.py
+│   ├── routes/
+│   │   ├── auth.py             # Login, register, password reset
+│   │   ├── products.py         # CRUD + archive/restore
+│   │   ├── orders.py
+│   │   ├── transactions.py
+│   │   ├── reports.py          # Analytics endpoints
+│   │   ├── suppliers.py
+│   │   ├── users.py
+│   │   └── notifications.py
+│   └── utils/
+│       ├── alerts.py           # Stock threshold + auto-order logic
+│       └── email_service.py    # Email alerts & password reset emails
+│
+└── frontend/
+    ├── public/
+    └── src/
+        ├── App.js              # Route definitions
+        ├── components/         # Navbar, Sidebar, Footer, Toast
+        └── pages/              # Dashboard, Products, Orders,
+                                # Transactions, Reports, Login, etc.
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## ⚙️ Setup & Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Prerequisites
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Python 3.10+
+- Node.js 18+
+- npm
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 1. Clone the Repository
 
-## Learn More
+```bash
+git clone https://github.com/shree-latha-hebbar/Inventory-Tracking-System.git
+cd Inventory-Tracking-System
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 2. Backend Setup
 
-### Code Splitting
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Create a `.env` file in the `backend/` directory:
 
-### Analyzing the Bundle Size
+```env
+SECRET_KEY=your_secret_key
+JWT_SECRET_KEY=your_jwt_secret
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Run the Flask server:
 
-### Making a Progressive Web App
+```bash
+python app.py
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The API will be available at `http://localhost:5001`
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 3. Frontend Setup
 
-### Deployment
+```bash
+cd frontend
+npm install
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+The app will open at `http://localhost:3000`
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🔐 Default Roles & Permissions
+
+| Action                    | Staff | Manager | Admin |
+|---------------------------|:-----:|:-------:|:-----:|
+| View products & dashboard | ✅    | ✅      | ✅    |
+| Add / Edit products       | ✅    | ✅      | ✅    |
+| Archive products          | ❌    | ✅      | ✅    |
+| Restore archived products | ❌    | ✅      | ✅    |
+| Permanently delete        | ❌    | ❌      | ✅    |
+| Create new user accounts  | ❌    | ❌      | ✅    |
+
+> **Note:** Only Admins can register new users. New accounts must be created by an existing Admin through the application.
+
+---
+
+## 🔌 API Overview
+
+| Method | Endpoint                        | Description                        |
+|--------|---------------------------------|------------------------------------|
+| POST   | `/api/auth/login`               | Login with username or email       |
+| POST   | `/api/auth/forgot-password`     | Send password reset email          |
+| POST   | `/api/auth/reset-password`      | Reset password via token           |
+| GET    | `/api/products/`                | List all active products           |
+| POST   | `/api/products/`                | Add a new product                  |
+| DELETE | `/api/products/:id?mode=temporary` | Archive a product               |
+| DELETE | `/api/products/:id?mode=permanent` | Permanently delete (Admin only) |
+| POST   | `/api/products/:id/restore`     | Restore archived product           |
+| GET    | `/api/reports/summary`          | Dashboard KPIs                     |
+| GET    | `/api/reports/sales-trend`      | 7-day movement trend               |
+| GET    | `/api/reports/critical-list`    | Products with critically low stock |
+
+All protected routes require a `Bearer <token>` in the `Authorization` header.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
